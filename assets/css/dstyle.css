@@ -1,0 +1,367 @@
+/* -----------------------------------------------------------
+   Fuentes Personalizadas
+----------------------------------------------------------- */
+@font-face {
+  font-family: 'StamAshkenazCLM';
+  src: url('../fonts/StamAshkenazCLM.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Metatron-Regular';
+  src: url('../fonts/Metatron-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* -----------------------------------------------------------
+   Variables de color y fuentes
+----------------------------------------------------------- */
+:root {
+  --bg: #1a0028;
+  --bg-alt: #30003f;
+  --text: #fef5e3;
+  --accent: #fe69a5;
+  --glow: #fec630;
+  --muted: #692a8c;
+  --font-main: 'Inter', sans-serif;
+  --font-hebrew: 'StamAshkenazCLM', serif;
+}
+
+/* -----------------------------------------------------------
+   Estilos base
+----------------------------------------------------------- */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-main);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  text-align: center;
+  color: var(--text);
+  margin-top: 1rem;
+  font-size: 2.3em;
+  font-weight: 700;
+  text-shadow: 0 0 6px var(--glow), 0 0 12px var(--glow), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+h1 .stam {
+  display: inline;
+  font-size: 1.2em;
+}
+
+/* -----------------------------------------------------------
+   Tabla de los 72 Nombres
+----------------------------------------------------------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: var(--bg-alt);
+  border-radius: 10px;
+  overflow: hidden;
+}
+th {
+  background-color: var(--bg-alt);
+  color: var(--glow);
+  padding: 14px;
+  font-weight: 600;
+  border-bottom: 1px solid #444;
+  text-align: center;
+}
+td {
+  padding: 12px;
+  border-bottom: 1px solid #222;
+  text-align: center;
+  vertical-align: middle;
+}
+td.btn-cell {
+  text-align: center;
+}
+td.gem {
+  color: var(--glow);
+  font-weight: bold;
+  text-align: center;
+}
+
+/* -----------------------------------------------------------
+   Nombres Hebreos y Metatrónicos (Tabla)
+----------------------------------------------------------- */
+.hebrew-box {
+  font-family: var(--font-hebrew);
+  font-size: 1.6em;
+  line-height: 1.2;
+  color: var(--text);
+  text-shadow: 0 0 5px white;
+  text-align: center;
+}
+.stam {
+  font-family: 'StamAshkenazCLM', serif;
+  font-size: 1.6em;
+  color: white;
+  text-shadow: 0 0 6px white;
+  direction: rtl;
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+}
+.meta {
+  font-family: 'Metatron-Regular', serif;
+  font-size: 1.7em;
+  color: white;
+  text-shadow: 0 0 6px white;
+  display: block;
+  margin-top: 2px;
+  direction: ltr;
+  text-align: center;
+}
+
+/* -----------------------------------------------------------
+   Caja de Nombre Actual (Current Box)
+----------------------------------------------------------- */
+#current.cur-box {
+  background-color: #22002c;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 2rem auto;
+  color: var(--text);
+  box-shadow: 0 0 20px rgba(254, 245, 227, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+#current h2 {
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--glow);
+  margin: 0;
+  text-align: center;
+}
+
+.cur-time {
+  text-align: center;
+}
+
+
+.cur-name-block {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 3rem;
+  margin-top: 0.5rem;
+}
+
+.cur-info-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--glow);
+  font-weight: bold;
+  text-align: center;
+  gap: 0.3rem;
+}
+
+.cur-time {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.cur-heading {
+  font-size: 1em;
+  line-height: 1;
+}
+
+
+.cur-name-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 3rem;
+  margin: 0 auto;
+}
+
+#curStam {
+  display: flex;
+  direction: rtl;
+  font-family: 'StamAshkenazCLM', serif;
+  font-size: 5.4em;
+  gap: 1.2rem;
+  text-shadow: 0 0 22px white;
+  color: white;
+}
+
+#curMeta {
+  display: flex;
+  direction: rtl;
+  font-family: 'Metatron-Regular', serif;
+  font-size: 5.6em;
+  gap: 1.2rem;
+  text-shadow: 0 0 32px white;
+  color: white;
+}
+
+.cur-info-bottom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: -0.5rem;
+  flex-wrap: nowrap;
+  flex-direction: row;
+}
+
+
+
+.cur-gematria {
+  text-align: center;
+  margin-top: 0.5rem;
+  font-size: 1.1em;
+  color: var(--glow);
+  font-weight: bold;
+}
+
+
+.cur-letters {
+  font-size: 1.3em;
+  font-family: var(--font-main);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.cur-desc {
+  font-size: 1em;
+  font-family: var(--font-main);
+  color: var(--text);
+  max-width: 320px;
+  text-align: left;
+}
+
+.cur-action {
+  text-align: center;
+}
+.cur-action button {
+  background-color: var(--accent);
+  color: var(--text);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1em;
+  margin-top: 1em;
+  transition: all 0.2s ease;
+}
+.cur-action button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* -----------------------------------------------------------
+   Fonética por letra (debajo del nombre hebreo)
+----------------------------------------------------------- */
+.cur-fonetic-row {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  font-size: 1em;
+  font-family: var(--font-main);
+  color: var(--text);
+  margin-top: -1.2rem; /* 👈 bien pegado a las letras hebreas */
+}
+
+/* -----------------------------------------------------------
+   Selector de Zona Horaria
+----------------------------------------------------------- */
+#timezone-box {
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem auto;
+  flex-wrap: wrap;
+  font-size: 1em;
+  text-align: center;
+}
+#timezone-box label {
+  font-weight: bold;
+  color: var(--glow);
+}
+#timezone-box select,
+#timezone-box input[type="time"] {
+  background-color: #22002c;
+  border: 1px solid var(--muted);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+/* -----------------------------------------------------------
+   Encabezado con Logo y Título
+----------------------------------------------------------- */
+#header-bar {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  max-width: 1000px;
+  margin: 0 auto;
+  gap: 1rem;
+  padding: 1rem 2rem;
+}
+#header-bar img {
+  display: flex;
+  align-items: left;
+  height: 60px;
+  width: auto;
+  max-width: 100%;
+  filter: drop-shadow(0 0 5px var(--glow));
+  opacity: 0.92;
+}
+#header-bar h1 {
+  margin: 0;
+  font-size: 2em;
+  font-weight: 600;
+  color: var(--text);
+  text-shadow: none;
+}
+
+/* -----------------------------------------------------------
+   Utilidades
+----------------------------------------------------------- */
+.no-show {
+  visibility: hidden;
+}
+
+tr.highlight {
+  background-color: var(--accent) !important;
+  color: black;
+  transition: background-color 0.5s ease;
+}
+
+.next-meditation-link {
+  color: var(--glow);
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  font-size: 1em;
+  margin-top: 1rem;
+  transition: opacity 0.3s ease;
+}
+
+.next-meditation-link:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
