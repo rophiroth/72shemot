@@ -10,40 +10,23 @@
 (() => {
   /* ---------- 1. Mapa de IDs de video (72) ---------- */
   const videoMap = {
-    1:"AxAkSi2HzMA", 2:"AS8WljNP97k", 3:"uDut85DYlFY", 4:"E3ifDBHTQGA", 5:"T8-nqb2riAc",
-   6:"UVX1qBn84DQ", 7:"Ai_qEFvi0oY", 8:"ZwEet6qQ4BM", 9:"gaPuaCyHd6A", 10:"FIJYjTlYjgQ",
-   11:"WrhDNbfsWRI", 12:"Yns_Q93sMKU", 13:"TU08hBsH5Z4", 14:"CY54pA7vJQ8", 15:"xO5s6yXJ5cc",
-   16:"FOdiWQr7i3w", 17:"Losvwml-EWU", 18:"UrVhiVEh0FA", 19:"pu_e_OF_x18", 20:"ep784S2tLL8",
-   21:"0ijRC6ruWiM", 22:"gi8_ZXjL7sw", 23:"zSMbhmoplxE", 24:"LRkbakNZLrA", 25:"H2tuqcY3Gi0",
-   26:"U5rk3XFIRUw", 27:"_EIicTeFPZk", 28:"FftcBtq1z1A", 29:"GAkuDtVY6Ho", 30:"54RmhPuuEm4",
-   31:"U-hfaoEPOz8", 32:"m22NW2WGKr0", 33:"3P7x4UQ0mfM", 34:"h0L7dCI5Dpk", 35:"vT1-0Ps_jCI",
-   36:"gGZXSBRGwqg", 37:"zd7wdVYvrog", 38:"LQdnyajTccM", 39:"juYFQfMh_Wc", 40:"ltXRerbqI4w",
-   41:"HvYhDwZ6W5E", 42:"khmNEqrsAlw", 43:"brmY8V8VP50", 44:"L5zofvENPIk", 45:"vC72_Qn4ZR4",
-   46:"qGeGk5GXrnA", 47:"cDYNCfQVwIc", 48:"Er9B_swvRQE", 49:"u_uRj0D6O9Q", 50:"SU5CGmwj_1k",
-   51:"zlDV-11IAs4", 52:"5EMq4hvhxRQ", 53:"aZAFzNWt484", 54:"AaZKP-D14OM", 55:"Jomb3_GEs6U",
-   56:"0aHtQOOSA6k", 57:"84W0E-aO-KE", 58:"WQI8sQ2_RMY", 59:"afie00e87QQ", 60:"SxiWaplWJ0E",
-   61:"NlQUyxCThe8", 62:"SgMB7GQZ8c0", 63:"Zd3l2VEVXJ4", 64:"vr7TH0y6XdY", 65:"SD0TkfPD72U",
-   66:"JvQhqbXL83M", 67:"x3kcQVtUy7Q", 68:"aywriayaBUU", 69:"61jumO-NcNA", 70:"99GJP3mttqM",
+    1:"AxAkSi2HzMA",  2:"wrn3FRH72ts", 3:"uDut85DYlFY", 4:"E3ifDBHTQGA", 5:"T8-nqb2riAc",
+    6:"UVX1qBn84DQ",  7:"Ai_qEFvi0oY", 8:"ZwEet6qQ4BM", 9:"gaPuaCyHd6A",10:"FIJYjTlYjgQ",
+   11:"WrhDNbfsWRI", 12:"Yns_Q93sMKU",13:"TU08hBsH5Z4",14:"HFuSMOs568w",15:"xO5s6yXJ5cc",
+   16:"FOdiWQr7i3w", 17:"Losvwml-EWU",18:"UrVhiVEh0FA",19:"pu_e_OF_x18",20:"ep784S2tLL8",
+   21:"0ijRC6ruWiM", 22:"Ivv-9mSFMAA",23:"zSMbhmoplxE",24:"LRkbakNZLrA",25:"kHwnQ-eJMgk",
+   26:"BDRj2yA6JVk", 27:"_EIicTeFPZk",28:"725_UnF6di0",29:"GAkuDtVY6Ho",30:"54RmhPuuEm4",
+   31:"U-hfaoEPOz8", 32:"m22NW2WGKr0",33:"3P7x4UQ0mfM",34:"h0L7dCI5Dpk",35:"vT1-0Ps_jCI",
+   36:"gGZXSBRGwqg", 37:"zd7wdVYvrog",38:"LQdnyajTccM",39:"juYFQfMh_Wc",40:"ltXRerbqI4w",
+   41:"HvYhDwZ6W5E", 42:"khmNEqrsAlw",43:"brmY8V8VP50",44:"L5zofvENPIk",45:"vC72_Qn4ZR4",
+   46:"qGeGk5GXrnA", 47:"cDYNCfQVwIc",48:"Er9B_swvRQE",49:"u_uRj0D6O9Q",50:"5voS-KrTNYE",
+   51:"VJ-Y4omHvzw", 52:"5EMq4hvhxRQ",53:"aZAFzNWt484",54:"Lj09gAtR1l4",55:"Jomb3_GEs6U",
+   56:"0aHtQOOSA6k", 57:"84W0E-aO-KE",58:"F1aYEvyq97U",59:"afie00e87QQ",60:"SxiWaplWJ0E",
+   61:"NlQUyxCThe8", 62:"SgMB7GQZ8c0",63:"Zd3l2VEVXJ4",64:"vr7TH0y6XdY",65:"SD0TkfPD72U",
+   66:"JvQhqbXL83M", 67:"x3kcQVtUy7Q",68:"uK7BT2SizoU",69:"61jumO-NcNA",70:"99GJP3mttqM",
    71:"Cs2nzAiftw0", 72:"ldzNG7whB9w"
   };
   const linkFor = i => `https://www.youtube.com/watch?v=${videoMap[i]}`;
-
-  // Try to load updated video IDs from JSON (keeps code decoupled from content)
-  try {
-    fetch('assets/js/videos.json?v=' + Date.now())
-      .then(r => (r.ok ? r.json() : null))
-      .then(j => {
-        if (!j) return;
-        Object.keys(j).forEach(k => {
-          const idx = parseInt(k, 10);
-          if (!isNaN(idx) && j[k]) videoMap[idx] = j[k];
-        });
-        console.log('🎬 Video map loaded from videos.json');
-      })
-      .catch(err => console.warn('⚠️ Could not load videos.json', err));
-  } catch (e) {
-    console.warn('⚠️ videos.json preload failed', e);
-  }
 
   /* ---------- 2. DOM references ---------- */
   const tzSel   = document.getElementById('tz');
@@ -55,12 +38,10 @@
   const curDesc = document.getElementById('curDesc');
   const curBtn  = document.getElementById('curBtn');
   const curOrd  = document.getElementById('curOrd');
-  const curHeading = document.getElementById('curHeading');
   const curStam = document.getElementById('curStam');
   const curMeta = document.getElementById('curMeta');
   const curLet  = document.getElementById('curLet');
   const curGem  = document.getElementById('curGem');
-  const curZod  = document.getElementById('curZod');
 
   /* ---------- 3. Safe access to data from PHP ---------- */
   const n = window.names || [];
@@ -69,7 +50,6 @@
   /* ---------- 4. Helpers ---------- */
   const two = n => n.toString().padStart(2, '0');
   const mins = (h, m) => (h * 60 + m) % 1440;
-  const zodiacEmoji = ['♈︎','♉︎','♊︎','♋︎','♌︎','♍︎','♎︎','♏︎','♐︎','♑︎','♒︎','♓︎'];
 
   function openMedit(i) {
     window.open(linkFor(i), '_blank');
@@ -115,22 +95,6 @@
       // Mostrar hora de inicio
       curTime.textContent = `${two(Math.floor(start / 60))}:${two(start % 60)}`;
       curOrd.textContent = ord;
-      if (curHeading) {
-        const lang = (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'es';
-        if (lang === 'en') {
-          curHeading.textContent = `Meditation ${ord}`;
-        } else {
-          curHeading.textContent = `${ord}ª Meditación`;
-        }
-      }
-      if (curZod) {
-        const zIdx = Math.floor((ord - 1) / 6);
-        const zNames = (window.I18N && window.I18N.zodiacNames && window.I18N.zodiacNames[window.I18N.getLang() || 'es']) || [];
-        curZod.textContent = zodiacEmoji[zIdx] || '';
-        const zName = zNames[zIdx] || '';
-        curZod.title = zName;
-        curZod.setAttribute('aria-label', zName);
-      }
       curStam.textContent = n[idx] || '';
       curMeta.textContent = n[idx] || '';
     
@@ -156,9 +120,6 @@
     renderCurrent(base);
     scheduleNextUpdate();
   }
-
-  // Expose for i18n to re-render when language changes
-  window.fullUpdate = fullUpdate;
 
   /* ---------- 6. Sunrise fetch ---------- */
   //let coords = null;

@@ -181,21 +181,6 @@ td.gem {
   line-height: 1;
 }
 
-/* ---------- Zodiac styles ---------- */
-.zodiac,
-.zodiac-badge {
-  margin-left: 0.25rem;
-  color: var(--glow);
-  font-weight: 600;
-  font-size: 0.95em;
-}
-.ord .zodiac {
-  display: inline-block;
-  margin-left: 0.4rem;
-  color: var(--glow);
-  font-weight: 600;
-}
-
 
 .cur-name-row {
   display: flex;
@@ -313,17 +298,6 @@ td.gem {
 #timezone-box label {
   font-weight: bold;
   color: var(--glow);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-#timezone-box .label-long {
-  display: inline;
-}
-#timezone-box .label-short {
-  display: none;
-  font-weight: 600;
-  letter-spacing: 0.05em;
 }
 #timezone-box select,
 #timezone-box input[type="time"] {
@@ -334,67 +308,18 @@ td.gem {
   border-radius: 6px;
   font-size: 1em;
 }
-#timezone-box .gps-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid var(--accent);
-  background: rgba(254, 105, 165, 0.16);
-  color: var(--text);
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-  flex-shrink: 0;
-}
-#timezone-box .gps-btn:hover,
-#timezone-box .gps-btn:focus-visible {
-  background: var(--accent);
-  color: #200018;
-  transform: translateY(-1px);
-}
-#timezone-box .gps-btn:focus-visible {
-  outline: 2px solid var(--glow);
-  outline-offset: 2px;
-}
-#timezone-box .gps-btn__icon svg {
-  width: 1.2rem;
-  height: 1.2rem;
-  display: block;
-}
-#timezone-box .gps-btn__text {
-  white-space: nowrap;
-}
-@media (max-width: 640px) {
-  #timezone-box .gps-btn {
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    border-radius: 50%;
-    justify-content: center;
-  }
-  #timezone-box .gps-btn__text {
-    display: none;
-  }
-  #timezone-box .gps-btn__icon svg {
-    width: 1.35rem;
-    height: 1.35rem;
-  }
-}
 
 /* -----------------------------------------------------------
    Encabezado con Logo y Título
 ----------------------------------------------------------- */
 #header-bar {
   display: grid;
-  grid-template-columns: auto 1fr auto; /* logo | title | lang */
+  grid-template-columns: auto 1fr;
   align-items: center;
   max-width: 1000px;
   margin: 0 auto;
   gap: 1rem;
-  padding: 0.6rem 0.8rem;
+  padding: 1rem 2rem;
 }
 #header-bar img {
   display: flex;
@@ -404,32 +329,6 @@ td.gem {
   max-width: 100%;
   filter: drop-shadow(0 0 5px var(--glow));
   opacity: 0.92;
-}
-
-/* Compact language switch, inline in header */
-.lang-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.lang-switch label.sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-.lang-switch select {
-  background: rgba(255,255,255,0.06);
-  color: var(--text);
-  border: 1px solid var(--muted);
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 0.85em;
 }
 #header-bar h1 {
   margin: 0;
@@ -495,184 +394,3 @@ html {
   background: #fec630;       /* Hover opcional */
   color: #30003f;
 }
-
-@media (max-width: 768px) {
-  /* Header más pequeño en móvil */
-  #header-bar { padding: 0.5rem 0.6rem; gap: 0.6rem; }
-  #header-bar h1 {
-    font-size: clamp(0.95rem, 4vw, 1.2rem);
-    text-align: center;
-  }
-  #header-bar img { height: 36px; }
-  .lang-switch { display: inline-flex; }
-  .lang-switch select { font-size: 0.8em; padding: 2px 4px; }
-  /* Shorten title on mobile */
-  .h1-suffix { display: none; }
-
-  /* Mantener controles en una sola fila */
-  #timezone-box {
-    flex-wrap: nowrap;
-    gap: 0.5rem;
-    font-size: 0.95em;
-  }
-  #timezone-box label {
-    font-size: 0.78em;
-    gap: 0.25rem;
-    position: relative;
-  }
-  #timezone-box label .label-long {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    clip-path: inset(50%);
-    border: 0;
-  }
-  #timezone-box label .label-short {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.95em;
-    letter-spacing: 0.08em;
-  }
-  #timezone-box .sunrise-label .label-short {
-    font-size: 1.1em;
-  }
-  #timezone-box select,
-  #timezone-box input[type="time"] {
-    padding: 4px 8px;
-    font-size: 0.85em;
-  }
-  #timezone-box input[type="time"] {
-    width: 5.4ch;
-  }
-  #timezone-box select {
-    min-width: 0;
-    flex: 1 1 48vw;
-    max-width: 52vw;
-  }
-  #timezone-box input[type="time"],
-  #timezone-box button {
-    min-width: 0;
-    max-width: 28vw;
-  }
-
-  /* Espaciado más apretado para la fila del nombre actual */
-  .cur-name-row {
-    gap: 1rem;
-  }
-
-  /* Tamaños moderados de letras en móvil */
-  #curStam {
-    font-size: clamp(3.5rem, 16vw, 10rem);
-  }
-  #curMeta {
-    font-size: clamp(3.5rem, 16vw, 10rem);
-  }
-
-  /* Caja actual a ancho completo en móvil */
-  #current.cur-box {
-    max-width: 100%;
-    padding: 1.2rem;
-    margin: 1rem auto;
-  }
-
-  /* Descripción más ancha en móvil */
-  .cur-desc {
-    max-width: 92vw;
-  }
-}
-
-/* Ajustes solo para móvil en vertical (portrait) */
-@media (max-width: 768px) and (orientation: portrait) {
-  /* Evita overflow lateral en portrait */
-  html, body { max-width: 100vw; overflow-x: hidden; }
-
-  /* Mantener controles en una sola línea y compactos */
-  #timezone-box { flex-wrap: nowrap; gap: 0.3rem; justify-content: center; }
-  #timezone-box label { white-space: nowrap; font-size: 0.72em; gap: 0.2rem; position: relative; }
-  #timezone-box label .label-short { font-size: 0.95em; letter-spacing: 0.1em; }
-  #timezone-box .sunrise-label .label-short { font-size: 1.05em; }
-  #timezone-box select { min-width: 0; max-width: 56vw; flex: 1 1 56vw; }
-  #timezone-box input[type="time"] { width: 5.4ch; min-width: 0; }
-  #timezone-box button { white-space: nowrap; padding: 4px 6px; font-size: 0.8em; flex: 0 0 auto; }
-  #timezone-box .gps-btn {
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    border-radius: 50%;
-    justify-content: center;
-    gap: 0;
-  }
-  #timezone-box .gps-btn__text {
-    display: none;
-  }
-  #timezone-box .gps-btn__icon svg {
-    width: 1.3rem;
-    height: 1.3rem;
-  }
-
-  /* Letras grandes y centradas en portrait */
-  .cur-name-row { gap: 0.35rem; }
-  #current.cur-box { padding-top: 0.3rem; gap: 0.5rem; margin: 0.5rem auto; }
-  #current > .cur-name-row { gap: 0.4rem; }
-  .cur-name-center { margin-top: 0; }
-  #current h2 { font-size: 0.85em; margin: 0; line-height: 1; }
-  .cur-time { font-size: 0.9em; }
-  .cur-heading { font-size: 0.85em; }
-  #curStam,
-  #curMeta {
-    font-size: 26vw;
-    white-space: nowrap;
-    text-align: center;
-    justify-content: center;
-  }
-
-  /* Acción: botón + siguiente en una fila, más compacto */
-  .cur-action { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-  .cur-action button { font-size: 0.9em; padding: 6px 10px; }
-  .next-meditation-link { font-size: 0.85em; white-space: nowrap; }
-
-  /* Botón subir un poco más grande en portrait */
-  .back-to-top {
-    width: 100px;
-    height: 100px;
-    line-height: 100px;
-    font-size: 50px;
-  }
-
-  /* Tabla: encajar sin scroll horizontal (solo portrait móvil) */
-  #shemotTable {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-    overflow-x: visible;
-  }
-  #shemotTable th,
-  #shemotTable td {
-    font-size: 0.75em;
-    padding: 6px 4px;
-    white-space: normal; /* permitir saltos para que quepa */
-    word-break: break-word;
-  }
-  /* Distribución de columnas para que quepan al 100% */
-  #shemotTable th:nth-child(1), #shemotTable td:nth-child(1) { width: 8%;  }
-  #shemotTable th:nth-child(2), #shemotTable td:nth-child(2) { width: 15%; }
-  #shemotTable th:nth-child(3), #shemotTable td:nth-child(3) { width: 10%; }
-  #shemotTable th:nth-child(4), #shemotTable td:nth-child(4) { width: 20%; }
-  #shemotTable th:nth-child(5), #shemotTable td:nth-child(5) { width: 18%; }
-  #shemotTable th:nth-child(6), #shemotTable td:nth-child(6) { width: 10%; }
-  #shemotTable th:nth-child(7), #shemotTable td:nth-child(7) { width: 19%; }
-  /* Ajustes internos: hebreo y fonética más contenidos dentro de la tabla */
-  #shemotTable .hebrew-box .stam,
-  #shemotTable .hebrew-box .meta { font-size: 1.05em; text-shadow: none; }
-  #shemotTable .phonetic { font-size: 0.9em; white-space: normal; }
-  #shemotTable td.gem { font-size: 0.9em; }
-  #shemotTable .btn-cell .med-btn { padding: 4px 6px; font-size: 0.9em; }
-}
-
-
-
-

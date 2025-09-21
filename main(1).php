@@ -36,18 +36,12 @@ $rows = get72ShemotData();        // 72 filas
 </div>
 <!-- CONTROLES -->
 <div id="timezone-box" class="cur-box">
-  <label for="tz" class="tz-label">
-    <span class="label-long">Zona horaria:</span>
-    <span class="label-short" aria-hidden="true">TZ</span>
-  </label>
+  <label for="tz">Zona horaria:</label>
   <select id="tz"></select>
 
-  <label for="sunrise" class="sunrise-label">
-    <span class="label-long">Amanecer:</span>
-    <span class="label-short" aria-hidden="true">🌅</span>
-  </label>
+  <label for="sunrise">Amanecer:</label>
   <input type="time" id="sunrise" step="60" value="06:00">
-  <button id="gpsBtn" class="gps-btn" data-i18n-title="ui.use_gps_title" data-i18n-aria-label="ui.use_gps_title" title="Usar GPS para mayor precisión" aria-label="Usar GPS para mayor precisión">`r`n    <span class="gps-btn__icon" aria-hidden="true">`r`n      <svg viewBox="0 0 24 24" role="img" focusable="false">`r`n        <path d="M12 2a6 6 0 0 0-6 6c0 4.5 6 12 6 12s6-7.5 6-12a6 6 0 0 0-6-6zm0 8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor" />`r`n      </svg>`r`n    </span>`r`n    <span class="gps-btn__text" data-i18n="ui.use_gps_label">Usar GPS</span>`r`n  </button>
+  <button id="gpsBtn" title="Usar GPS para mayor precisión">📍 Usar GPS</button>
 
 </div>
 
@@ -156,4 +150,3 @@ $rows = get72ShemotData();        // 72 filas
 </script>
 </body>
 </html>
-
