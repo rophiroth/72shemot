@@ -7,11 +7,22 @@ ini_set('error_log', __DIR__ . '/php_error.log');
 
 require_once __DIR__ . '/data/shemot_data.php';
 $rows = get72ShemotData();        // 72 filas
+
+// Optional English dataset (if present)
+$rows_en = null;
+$en_file = __DIR__ . '/data/shemot_data_en.php';
+if (file_exists($en_file)) {
+  require_once $en_file;
+  if (function_exists('get72ShemotDataEN')) {
+    $rows_en = get72ShemotDataEN();
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- Open Graph meta tags para compartir en redes -->
 <meta property="og:title" content="72 Nombres de Dios - Meditaciones de Luz" />
 <meta property="og:description" content="Explora los 72 Nombres de Dios según la Kabaláh. Calcula cuál te corresponde ahora, según tu ubicación y hora exacta del amanecer." />
@@ -38,17 +49,41 @@ $rows = get72ShemotData();        // 72 filas
     <a href="https://www.sabiduriaholistica.org/" target="_blank" rel="noopener">
       <img src="assets/img/logo.png" alt="PsyHackers logo" />
     </a>
+    <h1>
+      <span data-i18n="header.h1_prefix">72 Nombres de</span>
+      <span class="stam">אל</span>
+      <span class="h1-suffix" data-i18n="header.h1_suffix">– Jesed: Bondad Pura</span>
+    </h1>
 
-    <h1>72 Nombres de <span class="stam">אל</span> – Jesed: Bondad Pura</h1>
+    <div class="lang-switch">
+      <label for="lang" class="sr-only" data-i18n="ui.language">Idioma:</label>
+      <select id="lang" aria-label="Language">
+        <option value="es">ES</option>
+        <option value="en">EN</option>
+      </select>
+    </div>
 </div>
 <!-- CONTROLES -->
 <div id="timezone-box" class="cur-box">
-  <label for="tz">Zona horaria:</label>
+  <label for="tz" class="tz-label">
+    <span class="label-long" data-i18n="ui.timezone">Zona horaria:</span>
+    <span class="label-short" aria-hidden="true">TZ</span>
+  </label>
   <select id="tz"></select>
 
-  <label for="sunrise">Amanecer:</label>
+  <label for="sunrise" class="sunrise-label">
+    <span class="label-long" data-i18n="ui.sunrise">Amanecer:</span>
+    <span class="label-short" aria-hidden="true">🌅</span>
+  </label>
   <input type="time" id="sunrise" step="60" value="06:00">
-  <button id="gpsBtn" title="Usar GPS para mayor precisión">📍 Usar GPS</button>
+  <button id="gpsBtn" class="gps-btn" data-i18n-title="ui.use_gps_title" data-i18n-aria-label="ui.use_gps_title" title="Usar GPS para mayor precisión" aria-label="Usar GPS para mayor precisión">
+    <span class="gps-btn__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" role="img" focusable="false">
+        <path d="M12 2a6 6 0 0 0-6 6c0 4.5 6 12 6 12s6-7.5 6-12a6 6 0 0 0-6-6zm0 8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor" />
+      </svg>
+    </span>
+    <span class="gps-btn__text" data-i18n="ui.use_gps_label">Usar GPS</span>
+  </button>
 
 </div>
 
@@ -56,11 +91,16 @@ $rows = get72ShemotData();        // 72 filas
 <div id="current" class="cur-box">
 <div class="cur-name-row">
   <!-- TÍTULO -->
-  <h2>🕯️ Energía disponible en este momento</h2>
+  <h2 data-i18n="current.title">🕯️ Energía disponible en este momento</h2>
     <!-- Hora + orden -->
     <div class="cur-info-col">
       <div class="cur-time">⏰ <span id="curTime">--:--</span></div>
-      <div class="cur-heading"><span id="curOrd">--</span>ª Meditación</div>
+      <div class="cur-heading">
+        <span id="curHeading">--</span>
+        <span id="curOrd" style="display:none">--</span>
+        &nbsp;·&nbsp;
+        <span id="curZod" class="zodiac-badge">--</span>
+      </div>
     </div>
 </div>
   <!-- Nombre en el centro -->
@@ -90,7 +130,7 @@ $rows = get72ShemotData();        // 72 filas
 
     <!-- Guematría -->
     <div class="cur-gematria">
-      Guematría <span id="curGem">--</span>
+      <span data-i18n="labels.gematria">Guematría</span> <span id="curGem">--</span>
     </div>
 
     <!-- Descripción -->
@@ -102,8 +142,8 @@ $rows = get72ShemotData();        // 72 filas
 
   <!-- BOTÓN -->
   <div class="cur-action">
-    <button id="curBtn" class="med-btn">🎵 Meditación guiada</button>
-    <span class="next-meditation-link" onclick="goToCurrentRow()">⬇️ Siguiente Meditación</span>
+    <button id="curBtn" class="med-btn" data-i18n="buttons.guided">🎵 Meditación guiada</button>
+    <span class="next-meditation-link" data-i18n="link.next_meditation" onclick="goToCurrentRow()">⬇️ Siguiente Meditación</span>
   </div>
 
 </div>
@@ -116,22 +156,31 @@ $rows = get72ShemotData();        // 72 filas
   <thead>
     <tr>
       <th></th>
-      <th>Hora de inicio</th>
-      <th>Orden</th>
-      <th>Nombre</th>
-      <th>Letras</th>
-      <th>Guematría</th>
-      <th>Kavanah / Bendición</th>
+      <th data-i18n="th.start_time">Hora de inicio</th>
+      <th data-i18n="th.order">Orden</th>
+      <th data-i18n="th.name">Nombre</th>
+      <th data-i18n="th.letters">Letras</th>
+      <th data-i18n="th.gematria">Guematría</th>
+      <th data-i18n="th.kavanah">Kavanah / Bendición</th>
     </tr>
   </thead>
   <tbody>
-    <?php foreach ($rows as $r): ?>
+    <?php 
+      $zodiacNames = ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis'];
+      $zodiacEmoji = ['♈︎','♉︎','♊︎','♋︎','♌︎','♍︎','♎︎','♏︎','♐︎','♑︎','♒︎','♓︎'];
+      foreach ($rows as $r): ?>
     <tr data-ord="<?= $r['orden'] ?>">
       <td class="btn-cell">
         <button class="med-btn" onclick="event.stopPropagation();openMedit(<?= $r['orden'] ?>)">🎵</button>
       </td>
       <td class="hora">--:--</td>
-      <td><?= $r['orden'] ?></td>
+      <td class="ord">
+        <span class="ord-num"><?= $r['orden'] ?></span>
+        <?php $zIdx = (int)floor((($r['orden'] ?? 1) - 1) / 6); ?>
+        <span class="zodiac" title="<?= $zodiacNames[$zIdx] ?? '' ?>">
+          <?= $zodiacEmoji[$zIdx] ?? '' ?>
+        </span>
+      </td>
       <td>
         <div class="hebrew-box">
           <span class="stam"><?= $r['nombre'] ?></span>
@@ -158,12 +207,14 @@ $rows = get72ShemotData();        // 72 filas
 <script>
   window.names = <?= json_encode(array_column($rows,'nombre')); ?>;
   window.descs = <?= json_encode(array_column($rows,'significado')); ?>;
+  window.descs_en = <?= json_encode($rows_en ? array_column($rows_en,'significado') : null); ?>;
 </script>
 
 <!-- BOTÓN PARA SUBIR AL TOPE -->
-<a href="#" class="back-to-top" title="Back to top">↑</a>
+<a href="#" class="back-to-top" data-i18n-title="back_to_top" title="Volver arriba">↑</a>
 
 <!-- SCRIPTS -->
+<script src="assets/js/i18n.js?v=<?= time() ?>"></script>
 <script src="assets/js/geo-ip.js?v=<?= time() ?>" defer></script>
 <script src="assets/js/tz-select.js"></script>
 <script src="assets/js/app.js?v=<?= time() ?>" defer></script>
@@ -174,3 +225,5 @@ $rows = get72ShemotData();        // 72 filas
 </script>
 </body>
 </html>
+
+
