@@ -439,6 +439,22 @@ td.gem {
   text-shadow: none;
 }
 
+/* Make the title link look like plain heading (no blue/underline) */
+#header-bar h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+#header-bar h1 a:visited {
+  color: inherit;
+}
+#header-bar h1 a:hover {
+  text-decoration: none;
+}
+#header-bar h1 a:focus-visible {
+  outline: 2px dashed var(--glow);
+  outline-offset: 2px;
+}
+
 /* -----------------------------------------------------------
    Utilidades
 ----------------------------------------------------------- */

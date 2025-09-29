@@ -46,13 +46,15 @@ if (file_exists($en_file)) {
 </head>
 <body class="no-show">
 <div id="header-bar">
-    <a href="https://www.sabiduriaholistica.org/" target="_blank" rel="noopener">
+    <a id="siteLink" href="https://www.sabiduriaholistica.org/" target="_blank" rel="noopener">
       <img src="assets/img/logo.png" alt="PsyHackers logo" />
     </a>
     <h1>
+      <a id="titleLink" href="https://www.sabiduriaholistica.org/" target="_blank" rel="noopener">
       <span data-i18n="header.h1_prefix">72 Nombres de</span>
       <span class="stam">אל</span>
-      <span class="h1-suffix" data-i18n="header.h1_suffix">– Jesed: Bondad Pura</span>
+      <span class="h1-suffix" data-i18n="header.h1_suffix">- Jesed: Bondad Pura</span>
+      </a>
     </h1>
 
     <div class="lang-switch">

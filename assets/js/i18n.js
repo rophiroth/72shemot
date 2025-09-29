@@ -84,6 +84,18 @@
     return 'es';
   })();
 
+  // If no saved preference, try to infer from browser language
+  try {
+    const saved = localStorage.getItem('lang');
+    const hasSaved = (saved === 'es' || saved === 'en');
+    if (!hasSaved) {
+      const navLang = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+      if (/^es/i.test(navLang)) lang = 'es';
+      else if (/^en/i.test(navLang)) lang = 'en';
+      else lang = 'es';
+    }
+  } catch (_) {}
+
   function t(key) {
     return (dict[lang] && dict[lang][key]) || key;
   }
@@ -96,8 +108,20 @@
     document.title = t('doc.title');
     const ogTitle = document.querySelector('meta[property="og:title"]');
     const ogDesc  = document.querySelector('meta[property="og:description"]');
+    const ogURL   = document.querySelector('meta[property=\"og:url\"]');
     if (ogTitle) ogTitle.setAttribute('content', t('og.title'));
     if (ogDesc)  ogDesc.setAttribute('content',  t('og.description'));
+    if (ogURL) {
+      const baseURL = (lang === 'es') ? 'https://www.sabiduriaholistica.org/' : 'https://psyhackers.org/';
+      ogURL.setAttribute('content', baseURL);
+    }
+
+    // Update header links (logo and title) by language
+    const headerURL = (lang === 'es') ? 'https://www.sabiduriaholistica.org/' : 'https://psyhackers.org/';
+    const siteLink = document.getElementById('siteLink');
+    const titleLink = document.getElementById('titleLink');
+    if (siteLink) siteLink.setAttribute('href', headerURL);
+    if (titleLink) titleLink.setAttribute('href', headerURL);
 
     // Text nodes
     document.querySelectorAll('[data-i18n]').forEach(el => {
