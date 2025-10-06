@@ -206,7 +206,8 @@ function scheduleNextUpdate() {
   updateScheduled = true;
   const now = new Date();
   const currentIndex = parseInt(curOrd.textContent, 10) - 1;
-    const [hh, mm] = horaEls[(currentIndex + 1)].textContent.trim().split(':').map(Number);
+    const nextIdx = horaEls.length ? (currentIndex + 1) % horaEls.length : 0;
+    const [hh, mm] = horaEls[nextIdx].textContent.trim().split(':').map(Number);
     const nextTime = new Date();
     nextTime.setHours(hh, mm, 0, 0);
   const delay = nextTime - now;
@@ -251,7 +252,9 @@ document.getElementById('gpsBtn').addEventListener('click', () => {
   
   function goToCurrentRow() {
       const ord = parseInt(document.getElementById("curOrd").textContent, 10);
-      const row = document.querySelector(`tr[data-ord="${ord+1}"]`);
+      const total = document.querySelectorAll('#shemotTable tbody tr').length || 72;
+      const nextOrd = (ord % total) + 1;
+      const row = document.querySelector(`tr[data-ord="${nextOrd}"]`);
       if (row) {
         row.scrollIntoView({ behavior: "smooth", block: "center" });
         row.classList.add("highlight");
