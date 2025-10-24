@@ -8,6 +8,8 @@
    • botón y fila clickeable
 ----------------------------------------------------------- */
 (() => {
+  // Evitar parpadeo inicial: no renderizar hasta tener amanecer/ubicación
+  let bootReady = false;
   /* ---------- 1. Mapa de IDs de video (72) ---------- */
   const videoMap = {
     1:"AxAkSi2HzMA", 2:"AS8WljNP97k", 3:"uDut85DYlFY", 4:"E3ifDBHTQGA", 5:"T8-nqb2riAc",
@@ -148,6 +150,8 @@
 
 
   function fullUpdate() {
+    // No mostrar hasta que tengamos datos iniciales listos
+    if (!bootReady) return;
     if (!sunrise.value) sunrise.value = '06:00';
     const [h, m] = sunrise.value.split(':').map(Number);
     if (isNaN(h) || isNaN(m)) return;
@@ -241,8 +245,10 @@ function scheduleNextUpdate() {
     tr.addEventListener('click', () => openMedit(parseInt(tr.dataset.ord)));
   });
   tzSel.addEventListener('change', fetchSun);
-  sunrise.addEventListener('input', fullUpdate);
-  sunrise.addEventListener('change', fullUpdate);
+  sunrise.addEventListener('input', () => { bootReady = true; fullUpdate(); });
+  sunrise.addEventListener('change', () => { bootReady = true; fullUpdate(); });
+  // Fallback: si en ~2.5s no hubo datos, renderizar con amanecer por defecto
+  setTimeout(() => { if (!bootReady) { bootReady = true; fullUpdate(); } }, 2500);
 document.getElementById('gpsBtn').addEventListener('click', () => {
   console.log("📡 Forzando GPS...");
       tryGeolocation(fetchSun); // ← usa la función de geo-ip.js con callback
