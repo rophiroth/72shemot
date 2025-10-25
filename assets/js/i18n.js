@@ -34,6 +34,7 @@
       'th.kavanah': 'Kavanah / Bendición',
 
       'back_to_top': 'Volver arriba',
+      'twelve.hint': 'Modo 12h (cada 10 min). Noche: nombres normales · Día: letras invertidas',
 
       'zodiac': ['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis']
     },
@@ -70,6 +71,7 @@
       'th.kavanah': 'Kavanah / Blessing',
 
       'back_to_top': 'Back to top',
+      'twelve.hint': '12h mode (every 10 min). Night: normal names · Day: reversed letters',
 
       'zodiac': ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']
     }

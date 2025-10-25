@@ -282,6 +282,73 @@ td.gem {
   box-shadow: 0 0 8px var(--accent);
 }
 
+/* 12h mode tiny controls */
+.twelve-mode-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+}
+.twelve-toggle {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.twelve-label {
+  font-size: 0.85em;
+  color: var(--glow);
+  cursor: pointer;
+}
+.twelve-icon {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--muted);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.85em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Anchor-at-sunrise toggle */
+.anchor-mode-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+}
+.anchor-toggle {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.anchor-label {
+  font-size: 0.9em;
+  color: var(--glow);
+  cursor: pointer;
+}
+
+/* Solar adjust (hourglass) */
+.solar-mode-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+}
+.solar-toggle {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.solar-label {
+  font-size: 0.9em;
+  color: var(--glow);
+  cursor: pointer;
+}
+
 /* -----------------------------------------------------------
    Fonética por letra (debajo del nombre hebreo)
 ----------------------------------------------------------- */
@@ -454,6 +521,45 @@ td.gem {
   outline: 2px dashed var(--glow);
   outline-offset: 2px;
 }
+
+/* Hamburger menu */
+#options-bar {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0 0.5rem;
+}
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--muted);
+  color: var(--text);
+  cursor: pointer;
+}
+.menu-btn:hover { background: rgba(255,255,255,0.12); }
+.options-panel {
+  position: relative;
+  display: none;
+  max-width: 1000px;
+  margin: 0.5rem auto 0;
+  padding: 0.8rem;
+  border: 1px solid var(--muted);
+  border-radius: 10px;
+  background: #22002c;
+}
+.options-panel.open { display: block; }
+.options-panel .options-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+  justify-content: center;
+}
+.options-panel .toggles { margin-top: 0.4rem; }
 
 /* -----------------------------------------------------------
    Utilidades
@@ -650,6 +756,9 @@ html {
   .cur-action { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
   .cur-action button { font-size: 0.9em; padding: 6px 10px; }
   .next-meditation-link { font-size: 0.85em; white-space: nowrap; }
+  /* On mobile show only the checkbox for the 12h mode */
+  .twelve-icon { display: none; }
+  .twelve-label { font-size: 0.9em; }
 
   /* Botón subir un poco más grande en portrait */
   .back-to-top {

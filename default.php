@@ -65,28 +65,54 @@ if (file_exists($en_file)) {
       </select>
     </div>
 </div>
-<!-- CONTROLES -->
-<div id="timezone-box" class="cur-box">
-  <label for="tz" class="tz-label">
-    <span class="label-long" data-i18n="ui.timezone">Zona horaria:</span>
-    <span class="label-short" aria-hidden="true">TZ</span>
-  </label>
-  <select id="tz"></select>
-
-  <label for="sunrise" class="sunrise-label">
-    <span class="label-long" data-i18n="ui.sunrise">Amanecer:</span>
-    <span class="label-short" aria-hidden="true">🌅</span>
-  </label>
-  <input type="time" id="sunrise" step="60" value="06:00">
-  <button id="gpsBtn" class="gps-btn" data-i18n-title="ui.use_gps_title" data-i18n-aria-label="ui.use_gps_title" title="Usar GPS para mayor precisión" aria-label="Usar GPS para mayor precisión">
-    <span class="gps-btn__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" role="img" focusable="false">
-        <path d="M12 2a6 6 0 0 0-6 6c0 4.5 6 12 6 12s6-7.5 6-12a6 6 0 0 0-6-6zm0 8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor" />
+<!-- MENÚ DE OPCIONES -->
+<div id="options-bar">
+  <button id="menuBtn" class="menu-btn" aria-haspopup="true" aria-controls="optionsPanel" aria-expanded="false" title="Opciones">
+    <span class="menu-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" role="img" focusable="false">
+        <rect x="3" y="6" width="18" height="2" fill="currentColor"/>
+        <rect x="3" y="11" width="18" height="2" fill="currentColor"/>
+        <rect x="3" y="16" width="18" height="2" fill="currentColor"/>
       </svg>
     </span>
-    <span class="gps-btn__text" data-i18n="ui.use_gps_label">Usar GPS</span>
   </button>
+  <div id="optionsPanel" class="options-panel" hidden>
+    <div id="timezone-box" class="cur-box options-section">
+      <label for="tz" class="tz-label">
+        <span class="label-long" data-i18n="ui.timezone">Zona horaria:</span>
+        <span class="label-short" aria-hidden="true">TZ</span>
+      </label>
+      <select id="tz"></select>
 
+      <label for="sunrise" class="sunrise-label">
+        <span class="label-long" data-i18n="ui.sunrise">Amanecer:</span>
+        <span class="label-short" aria-hidden="true">🌅</span>
+      </label>
+      <input type="time" id="sunrise" step="60" value="06:00">
+      <button id="gpsBtn" class="gps-btn" data-i18n-title="ui.use_gps_title" data-i18n-aria-label="ui.use_gps_title" title="Usar GPS para mayor precisión" aria-label="Usar GPS para mayor precisión">
+        <span class="gps-btn__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false">
+            <path d="M12 2a6 6 0 0 0-6 6c0 4.5 6 12 6 12s6-7.5 6-12a6 6 0 0 0-6-6zm0 8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="currentColor" />
+          </svg>
+        </span>
+        <span class="gps-btn__text" data-i18n="ui.use_gps_label">Usar GPS</span>
+      </button>
+    </div>
+    <div class="options-section toggles">
+      <span class="twelve-mode-wrap">
+        <input type="checkbox" id="twelveToggle" class="twelve-toggle" aria-label="Modo 12 horas (10 min)" />
+        <label for="twelveToggle" class="twelve-label" title="12h (10 min) Noche: normal · Día: invertido" data-i18n-title="twelve.hint">🔄</label>
+      </span>
+      <span class="anchor-mode-wrap">
+        <input type="checkbox" id="anchorSun" class="anchor-toggle" aria-label="Arrancar desde el atardecer" />
+        <label for="anchorSun" class="anchor-label" title="Activado: atardecer · Desactivado: amanecer">🌅/🌇</label>
+      </span>
+      <span class="solar-mode-wrap">
+        <input type="checkbox" id="solarAdjust" class="solar-toggle" aria-label="Ajuste solar proporcional" />
+        <label for="solarAdjust" class="solar-label" title="⏳ Ajusta día/noche para que 36/36 o 72/72 cubran exactamente la duración real">⏳</label>
+      </span>
+    </div>
+  </div>
 </div>
 
 <!-- CURRENT -->

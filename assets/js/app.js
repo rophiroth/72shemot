@@ -50,7 +50,9 @@
   /* ---------- 2. DOM references ---------- */
   const tzSel   = document.getElementById('tz');
   const sunrise = document.getElementById('sunrise');
-  const horaEls = [...document.querySelectorAll('.hora')];
+  // Note: do not cache time cells; table can change with 12h mode
+  const menuBtn  = document.getElementById('menuBtn');
+  const optionsPanel = document.getElementById('optionsPanel');
 
   const curTime = document.getElementById('curTime');
   const curName = document.getElementById('curName');
@@ -63,6 +65,24 @@
   const curLet  = document.getElementById('curLet');
   const curGem  = document.getElementById('curGem');
   const curZod  = document.getElementById('curZod');
+  // 12h mode control (checkbox, hidden) and anchor-at-sunrise (visible)
+  const twelveToggle = document.getElementById('twelveToggle');
+  const anchorToggle  = document.getElementById('anchorSun');
+  const solarToggle   = document.getElementById('solarAdjust');
+
+  // Keep sunrise/sunset minutes (local TZ minutes since 00:00)
+  const sun = { sunriseMin: null, sunsetMin: null, nextSunriseMin: null, nextSunsetMin: null };
+  const getPref12 = () => {
+    try { return localStorage.getItem('mode12') === '1'; } catch (_) { return false; }
+  };
+  const setPref12 = (v) => { try { localStorage.setItem('mode12', v ? '1' : '0'); } catch (_) {} };
+  const getAnchorPref = () => {
+    try { return localStorage.getItem('anchorSunrise') === '1'; } catch (_) { return false; }
+  };
+  const setAnchorPref = (v) => { try { localStorage.setItem('anchorSunrise', v ? '1' : '0'); } catch (_) {} };
+  const getSolarPref = () => { try { return localStorage.getItem('solarAdjust') === '1'; } catch (_) { return false; } };
+  const setSolarPref = (v) => { try { localStorage.setItem('solarAdjust', v ? '1' : '0'); } catch (_) {} };
+  let timeline = null; // computed starts per slot when solar adjust is ON
 
   /* ---------- 3. Safe access to data from PHP ---------- */
   const n = window.names || [];
@@ -71,6 +91,134 @@
   /* ---------- 4. Helpers ---------- */
   const two = n => n.toString().padStart(2, '0');
   const mins = (h, m) => (h * 60 + m) % 1440;
+  const formatTime = (totalMin, withSeconds) => {
+    // Normalize and convert to whole seconds
+    let tMin = ((totalMin % 1440) + 1440) % 1440;
+    let totalSec = Math.round(tMin * 60);
+    totalSec = ((totalSec % 86400) + 86400) % 86400;
+    const hh = Math.floor(totalSec / 3600);
+    const mm = Math.floor((totalSec % 3600) / 60);
+    const ss = totalSec % 60;
+    return withSeconds ? `${two(hh)}:${two(mm)}:${two(ss)}` : `${two(hh)}:${two(mm)}`;
+  };
+  const hmToMins = (hhmm) => {
+    if (!hhmm || typeof hhmm !== 'string') return null;
+    const [h, m] = hhmm.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return null;
+    return mins(h, m);
+  };
+  const inWindow = (nowMin, startMin, dur) => {
+    // checks if now in [start, start+dur) modulo 1440
+    const end = (startMin + dur) % 1440;
+    if (dur >= 1440) return true;
+    return startMin <= end
+      ? (nowMin >= startMin && nowMin < end)
+      : (nowMin >= startMin || nowMin < end);
+  };
+  // Hebrew-aware reverse: handle final (sofit) letter forms correctly
+  // Base → Final map and reverse (Final → Base)
+  const HEB_FINALS = { 'כ': 'ך', 'מ': 'ם', 'נ': 'ן', 'פ': 'ף', 'צ': 'ץ' };
+  const HEB_FINALS_REV = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
+  const isHebLetter = ch => /[\u0590-\u05FF]/.test(ch);
+  const toBaseForm = ch => HEB_FINALS_REV[ch] || ch;
+  const toFinalIfPossible = ch => (HEB_FINALS[ch] || ch);
+  const reverseHeb = s => {
+    if (typeof s !== 'string' || !s) return s;
+    // Split by whitespace to handle per-token finalization, then rejoin
+    return s.split(/(\s+)/).map(token => {
+      if (!token.trim()) return token; // keep spaces as-is
+      // Normalize any final letters to base, then reverse
+      const baseChars = Array.from(token).map(toBaseForm);
+      const rev = baseChars.reverse();
+      // Apply final form to the last Hebrew letter in this reversed token
+      for (let i = rev.length - 1; i >= 0; i--) {
+        if (isHebLetter(rev[i])) {
+          rev[i] = toFinalIfPossible(rev[i]);
+          break;
+        }
+      }
+      return rev.join('');
+    }).join('');
+  };
+  const reverseWords = s => (typeof s === 'string') ? s.split(/\s+/).reverse().join(' ') : s;
+
+  function isTwelveMode() { return getPref12(); }
+
+  function getNowLocalHM() {
+    const now = new Date().toLocaleString('en-US', {
+      timeZone: tzSel.value,
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const [h, m] = now.split(':').map(Number);
+    return { h, m, nowMin: mins(h, m) };
+  }
+
+  function getSchedule() {
+    // recompute sunriseMin from input value (user may edit)
+    const sr = hmToMins(sunrise.value);
+    if (sr != null) sun.sunriseMin = sr;
+    const nightBaseFallback = sun.sunriseMin != null ? (sun.sunriseMin + 720) % 1440 : null;
+    const baseSunset = (sun.sunsetMin != null) ? sun.sunsetMin : nightBaseFallback;
+    if (isTwelveMode() && sun.sunriseMin != null && baseSunset != null) {
+      const base = getAnchorPref() ? baseSunset : sun.sunriseMin; // ✅ checked=🌇 (sunset), unchecked=🌅 (sunrise)
+      return { mode: 'ten', base, delta: 10 };
+    }
+    // Classic 20-min mode; allow anchor toggle to pick base (sunrise or sunset)
+    let base;
+    if (getAnchorPref()) {
+      // ✅ checked = sunset as base
+      base = (baseSunset != null) ? baseSunset : (nightBaseFallback != null ? nightBaseFallback : hmToMins('18:00'));
+    } else {
+      // unchecked = sunrise as base
+      base = (sun.sunriseMin != null) ? sun.sunriseMin : hmToMins('06:00');
+    }
+    return { mode: 'twenty', base, delta: 20 };
+  }
+
+  function buildTimeline() {
+    timeline = null;
+    if (!getSolarPref()) return;
+    const haveSun = (sun.sunriseMin != null && sun.sunsetMin != null);
+    const haveNext = (sun.nextSunriseMin != null && sun.nextSunsetMin != null);
+    if (!haveSun || !haveNext) return;
+    const useTen = isTwelveMode();
+    const anchorSunset = getAnchorPref();
+
+    const dayStart = sun.sunriseMin, dayEnd = sun.sunsetMin;
+    const nightStart = sun.sunsetMin, nightEnd = sun.nextSunriseMin;
+    const dayDur = (dayEnd - dayStart + 1440) % 1440;
+    const nightDur = (nightEnd - nightStart + 1440) % 1440;
+
+    if (useTen) {
+      const daySlots = 72, nightSlots = 72;
+      const dayStep = dayDur / daySlots;
+      const nightStep = nightDur / nightSlots;
+      const arr = [];
+      if (anchorSunset) {
+        for (let i = 0; i < nightSlots; i++) arr.push((nightStart + i * nightStep) % 1440);
+        for (let i = 0; i < daySlots; i++) arr.push((dayStart + i * dayStep) % 1440);
+      } else {
+        for (let i = 0; i < daySlots; i++) arr.push((dayStart + i * dayStep) % 1440);
+        for (let i = 0; i < nightSlots; i++) arr.push((nightStart + i * nightStep) % 1440);
+      }
+      timeline = arr;
+    } else {
+      const daySlots = 36, nightSlots = 36;
+      const dayStep = dayDur / daySlots;
+      const nightStep = nightDur / nightSlots;
+      const arr = [];
+      if (anchorSunset) {
+        for (let i = 0; i < nightSlots; i++) arr.push((nightStart + i * nightStep) % 1440);
+        for (let i = 0; i < daySlots; i++) arr.push((dayStart + i * dayStep) % 1440);
+      } else {
+        for (let i = 0; i < daySlots; i++) arr.push((dayStart + i * dayStep) % 1440);
+        for (let i = 0; i < nightSlots; i++) arr.push((nightStart + i * nightStep) % 1440);
+      }
+      timeline = arr;
+    }
+  }
   const zodiacEmoji = ['♈︎','♉︎','♊︎','♋︎','♌︎','♍︎','♎︎','♏︎','♐︎','♑︎','♒︎','♓︎'];
 
   function openMedit(i) {
@@ -79,43 +227,130 @@
   window.openMedit = openMedit;
 
   /* ---------- 5. Rendering ---------- */
-  function renderTable(base) {
-  const horaEls = [...document.querySelectorAll('#shemotTable tbody tr')]
-    .sort((a, b) => Number(a.dataset.ord) - Number(b.dataset.ord))
-    .map(tr => tr.children[1]);
-
-  horaEls.forEach((td, i) => {
-    const t = (base + i * 20) % 1440;
-    td.textContent = `${two(Math.floor(t / 60))}:${two(t % 60)}`;
-  });
-}
-
-
-    function renderCurrent(base) {
-      const now = new Date().toLocaleString('en-US', {
-        timeZone: tzSel.value,
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    
-      const [h, m] = now.split(':').map(Number);
-      const nowMin = mins(h, m);
-    
-      // encontrar el bloque que ya está en curso
-      let idx = Math.floor((nowMin - base + 1440) % 1440 / 20);
-      let start = (base + idx * 20) % 1440;
-      let ord = idx + 1;
-    
-      // 🛠️ Ajustar si aún NO hemos entrado en ese bloque
-      if (nowMin < start) {
-        idx = (idx + 71) % 72;
-        start = (base + idx * 20) % 1440;
-        ord = idx + 1;
+  // Manage 72 vs 144 rows depending on mode
+  function ensureRowsForMode() {
+    const tbody = document.querySelector('#shemotTable tbody');
+    if (!tbody) return;
+    const tenMode = isTwelveMode();
+    // Always consider the first 72 non-extra rows as base
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const extras = rows.filter(r => r.classList.contains('extra-half'));
+    const baseRows = rows.filter(r => !r.classList.contains('extra-half')).slice(0, 72);
+    // Mark base rows as night half for disambiguation
+    baseRows.forEach(r => { if (!r.dataset.half) r.dataset.half = 'night'; });
+    if (tenMode) {
+      if (extras.length === 0) {
+        // Clone base 72 rows to make day half
+        baseRows.forEach(r => {
+          const clone = r.cloneNode(true);
+          clone.classList.add('extra-half');
+          clone.dataset.half = 'day';
+          // Keep same data-ord to preserve ord display; differentiate only by position
+          // Add row click handler like originals
+          clone.addEventListener('click', () => {
+            const ord = parseInt(clone.getAttribute('data-ord') || '0', 10);
+            if (ord) openMedit(ord);
+          });
+          tbody.appendChild(clone);
+        });
+        try { console.log(`➕ Duplicadas filas para 10-min: base=${baseRows.length}, total=${tbody.querySelectorAll('tr').length}`); } catch(_) {}
       }
+    } else {
+      // Remove extra half if present
+      extras.forEach(r => r.remove());
+      try { console.log(`➖ Removidas filas extra. Total ahora=${tbody.querySelectorAll('tr').length}`); } catch(_) {}
+    }
+  }
+
+  function renderTable(_baseIgnored) {
+    ensureRowsForMode();
+    const sched = getSchedule();
+    const rows = Array.from(document.querySelectorAll('#shemotTable tbody tr'));
+    const base = sched.base;
+    const delta = sched.delta;
+    const showSeconds = getSolarPref() && Array.isArray(timeline) && timeline.length >= rows.length;
+
+    rows.forEach((tr, i) => {
+      const useSolar = getSolarPref() && Array.isArray(timeline) && timeline.length >= rows.length;
+      const t = useSolar ? timeline[i] : (base + i * delta) % 1440;
+      const ordNum = (i % 72) + 1;
+      const idxName = ordNum - 1;
+      const reverseLetters = (sched.mode === 'ten') && (sun.sunriseMin != null)
+        ? inWindow(t, sun.sunriseMin, 720)
+        : false;
+
+      // Hora de inicio
+      const tdTime = tr.children[1];
+      tdTime.textContent = formatTime(t, showSeconds);
+
+      // Nombre hebreo (stam + meta)
+      const baseName = n[idxName] || '';
+      const displayName = reverseLetters ? reverseHeb(baseName) : baseName;
+      const stamEl = tr.querySelector('.hebrew-box .stam');
+      const metaEl = tr.querySelector('.hebrew-box .meta');
+      if (stamEl) stamEl.textContent = displayName;
+      if (metaEl) metaEl.textContent = displayName;
+
+      // Fonética (invertida en día)
+      const phonEl = tr.querySelector('.phonetic');
+      if (phonEl) {
+        const basePhon = phonEl.dataset.base || phonEl.textContent;
+        phonEl.dataset.base = basePhon;
+        phonEl.textContent = reverseLetters ? reverseWords(basePhon) : basePhon;
+      }
+
+      // Orden visible + Zodíaco
+      const ordNumEl = tr.querySelector('.ord .ord-num');
+      if (ordNumEl) ordNumEl.textContent = ordNum;
+      const zEl = tr.querySelector('.ord .zodiac');
+      if (zEl) {
+        const zIdx = Math.floor((ordNum - 1) / 6);
+        const zEmoji = ['♈︎','♉︎','♊︎','♋︎','♌︎','♍︎','♎︎','♏︎','♐︎','♑︎','♒︎','♓︎'];
+        zEl.textContent = zEmoji[zIdx] || '';
+        try {
+          const lang = (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'es';
+          const names = (window.I18N && window.I18N.zodiacNames && window.I18N.zodiacNames[lang]) || [];
+          zEl.setAttribute('title', names[zIdx] || '');
+          zEl.setAttribute('aria-label', names[zIdx] || '');
+        } catch (_) {}
+      }
+    });
+  }
+
+
+    function renderCurrent(_baseIgnored) {
+      const { nowMin } = getNowLocalHM();
+      const sched = getSchedule();
+      const base = sched.base;
+      const delta = sched.delta;
+      let pos;
+      if (getSolarPref() && Array.isArray(timeline) && timeline.length) {
+        // Estimate position by scanning timeline for last start <= now, considering wrap
+        const idx = (() => {
+          let best = 0; let bestDiff = 1e9;
+          for (let i = 0; i < timeline.length; i++) {
+            const t = timeline[i];
+            let diff = (nowMin - t + 1440) % 1440;
+            if (diff < bestDiff) { bestDiff = diff; best = i; }
+          }
+          return best;
+        })();
+        pos = idx;
+      } else {
+        pos = Math.floor(((nowMin - base + 1440) % 1440) / delta);
+      }
+      const ord = (pos % 72) + 1;
+      const idx = ord - 1;
+      const reverseLetters = (sched.mode === 'ten') && (sun.sunriseMin != null)
+        ? inWindow(nowMin, sun.sunriseMin, 720)
+        : false;
+      const start = (getSolarPref() && Array.isArray(timeline) && timeline.length) ? timeline[pos % timeline.length] : (base + pos * delta) % 1440;
+      const rowIndex = pos;
+      // Save current row index for navigation
+      try { window.__currentRowIndex = rowIndex; } catch(_) {}
     
       // Mostrar hora de inicio
-      curTime.textContent = `${two(Math.floor(start / 60))}:${two(start % 60)}`;
+      curTime.textContent = formatTime(start, getSolarPref());
       curOrd.textContent = ord;
       if (curHeading) {
         const lang = (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'es';
@@ -133,12 +368,16 @@
         curZod.title = zName;
         curZod.setAttribute('aria-label', zName);
       }
-      curStam.textContent = n[idx] || '';
-      curMeta.textContent = n[idx] || '';
+      const name = n[idx % 72] || '';
+      const disp = reverseLetters ? reverseHeb(name) : name;
+      curStam.textContent = disp;
+      curMeta.textContent = disp;
     
-      const row = document.querySelector(`#shemotTable tbody tr[data-ord="${ord}"]`);
+      const allRows = Array.from(document.querySelectorAll('#shemotTable tbody tr'));
+      const row = allRows[(rowIndex ?? 0) % (allRows.length || 1)] || null;
       if (row) {
-        curLet.textContent = row.children[4].textContent;
+        const letTxt = row.children[4].textContent;
+        curLet.textContent = reverseLetters ? reverseWords(letTxt) : letTxt;
         curGem.textContent = row.children[5].textContent;
         curDesc.textContent = row.children[6].textContent;
       } else {
@@ -153,11 +392,14 @@
     // No mostrar hasta que tengamos datos iniciales listos
     if (!bootReady) return;
     if (!sunrise.value) sunrise.value = '06:00';
-    const [h, m] = sunrise.value.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return;
-    const base = mins(h, m);
-    renderTable(base);
-    renderCurrent(base);
+    const sr = hmToMins(sunrise.value);
+    if (sr == null) return;
+    sun.sunriseMin = sr;
+    // Rebuild solar timeline if needed
+    buildTimeline();
+    ensureRowsForMode();
+    renderTable(sr);
+    renderCurrent(sr);
     scheduleNextUpdate();
   }
 
@@ -192,8 +434,19 @@ function fetchSun() {
           sunriseInput.dispatchEvent(new Event('input'));
           sunriseInput.dispatchEvent(new Event('change'));
         }
+        sun.sunriseMin = hmToMins(j.sunrise);
       } else {
         console.warn("❌ Respuesta inválida de sunrise.php");
+      }
+      if (j.sunset) {
+        sun.sunsetMin = hmToMins(j.sunset);
+        console.log("🌇 sunset (local) es:", j.sunset, sun.sunsetMin);
+      }
+      if (j.next_sunrise) {
+        sun.nextSunriseMin = hmToMins(j.next_sunrise);
+      }
+      if (j.next_sunset) {
+        sun.nextSunsetMin = hmToMins(j.next_sunset);
       }
     })
     .finally(() => {
@@ -209,35 +462,33 @@ function scheduleNextUpdate() {
     if (updateScheduled) return; // ⛔ ya fue llamada
   updateScheduled = true;
   const now = new Date();
-  const currentIndex = parseInt(curOrd.textContent, 10) - 1;
-    const nextIdx = horaEls.length ? (currentIndex + 1) % horaEls.length : 0;
-    const [hh, mm] = horaEls[nextIdx].textContent.trim().split(':').map(Number);
+  const timeCells = Array.from(document.querySelectorAll('#shemotTable tbody .hora'));
+  let minDelay = Infinity;
+  let chosenTime = null;
+  for (const cell of timeCells) {
+    const txt = (cell.textContent || '').trim();
+    const parts = txt.split(':').map(Number);
+    const hh = parts[0], mm = parts[1], ss = (parts.length > 2 ? parts[2] : 0) || 0;
+    if (isNaN(hh) || isNaN(mm) || isNaN(ss)) continue;
     const nextTime = new Date();
-    nextTime.setHours(hh, mm, 0, 0);
-  const delay = nextTime - now;
-
-  if (delay > 0) {
-    console.log("⏱️ Próxima actualización en:", Math.round(delay / 1000), "segundos");
-    setTimeout(() => {
-      console.log("🔁 Ejecutando actualización programada");
-      fullUpdate();         // ⬅️ fuerza render del nombre nuevo
-      updateScheduled = false; // 🌀 libera para el próximo ciclo
-      scheduleNextUpdate(); // ⬅️ se reprograma sola
-    }, delay);
-  } else {
-    console.warn("⚠️ Tiempo de actualización en el pasado. Ejecutando inmediatamente.");
-      console.group("⛔️ Diagnóstico del loop temporal");
-      console.log("📛 curOrd.textContent:", curOrd.textContent);
-      console.log("🧮 currentIndex:", currentIndex);
-      console.log("🔜 nextIndex:", currentIndex+1);
-      console.log("🕰️ nextTime (esperado):+", nextTime.toLocaleTimeString());
-      console.log("⏳ now:", now.toLocaleTimeString());
-      console.log("⌛ delay (ms):", delay);
-      console.groupEnd();
-    fullUpdate();
-    updateScheduled = false; // 🌀 libera para el próximo ciclo
-    scheduleNextUpdate();
+    nextTime.setHours(hh, mm, ss, 0);
+    let d = nextTime - now;
+    if (d <= 0) {
+      nextTime.setDate(nextTime.getDate() + 1);
+      d = nextTime - now;
+    }
+    if (d < minDelay) { minDelay = d; chosenTime = nextTime; }
   }
+
+  const delay = (minDelay === Infinity) ? 60_000 : minDelay; // fallback 1 min
+  const secs = Math.round(delay / 1000);
+  console.log("⏱️ Próxima actualización en:", secs, "segundos");
+  setTimeout(() => {
+    console.log("🔁 Ejecutando actualización programada");
+    fullUpdate();
+    updateScheduled = false;
+    scheduleNextUpdate();
+  }, delay);
 }
 
   /* ---------- 7. Events ---------- */
@@ -247,6 +498,91 @@ function scheduleNextUpdate() {
   tzSel.addEventListener('change', fetchSun);
   sunrise.addEventListener('input', () => { bootReady = true; fullUpdate(); });
   sunrise.addEventListener('change', () => { bootReady = true; fullUpdate(); });
+  // 12h toggle wiring
+  if (twelveToggle) {
+    twelveToggle.checked = getPref12();
+    twelveToggle.addEventListener('change', () => {
+      setPref12(twelveToggle.checked);
+      bootReady = true;
+      fullUpdate();
+    });
+  }
+  // Anchor-at-sunrise wiring (visible)
+  if (anchorToggle) {
+    anchorToggle.checked = getAnchorPref();
+    anchorToggle.addEventListener('change', () => {
+      setAnchorPref(anchorToggle.checked);
+      bootReady = true;
+      fullUpdate();
+    });
+  }
+  // Solar adjust wiring
+  if (solarToggle) {
+    solarToggle.checked = getSolarPref();
+    solarToggle.addEventListener('change', () => {
+      setSolarPref(solarToggle.checked);
+      bootReady = true;
+      fullUpdate();
+    });
+  }
+  const attachHintHandlers = (el, anchorEl) => {
+    if (!el) return;
+    const hintText = (window.I18N && I18N.t) ? I18N.t('twelve.hint') : 'Modo 12h (10 min)';
+    let hintTimer = null;
+    let hintEl = null;
+    const showHint = () => {
+      if (hintEl) return;
+      hintEl = document.createElement('div');
+      hintEl.textContent = hintText;
+      hintEl.style.position = 'fixed';
+      hintEl.style.zIndex = '9999';
+      hintEl.style.background = 'rgba(0,0,0,0.8)';
+      hintEl.style.color = '#fff';
+      hintEl.style.padding = '6px 8px';
+      hintEl.style.borderRadius = '6px';
+      hintEl.style.fontSize = '12px';
+      const r = (anchorEl || el).getBoundingClientRect();
+      hintEl.style.top = Math.max(8, r.bottom + 6) + 'px';
+      hintEl.style.left = Math.max(8, Math.min(window.innerWidth - 220, r.left)) + 'px';
+      document.body.appendChild(hintEl);
+      setTimeout(hideHint, 2000);
+    };
+    const hideHint = () => { if (hintEl) { hintEl.remove(); hintEl = null; } };
+    const startPress = () => { hintTimer = setTimeout(showHint, 600); };
+    const endPress = () => { if (hintTimer) clearTimeout(hintTimer); hintTimer = null; hideHint(); };
+    el.addEventListener('mousedown', startPress);
+    el.addEventListener('touchstart', startPress);
+    el.addEventListener('mouseup', endPress);
+    el.addEventListener('mouseleave', endPress);
+    el.addEventListener('touchend', endPress);
+  };
+  if (twelveToggle) {
+    attachHintHandlers(twelveToggle, twelveToggle);
+  }
+  // Menu interactions (click/hover)
+  if (menuBtn && optionsPanel) {
+    const openPanel = () => {
+      optionsPanel.hidden = false;
+      optionsPanel.classList.add('open');
+      menuBtn.setAttribute('aria-expanded','true');
+    };
+    const closePanel = () => {
+      optionsPanel.classList.remove('open');
+      optionsPanel.hidden = true;
+      menuBtn.setAttribute('aria-expanded','false');
+    };
+    let hoverTimer = null;
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (optionsPanel.classList.contains('open')) closePanel(); else openPanel();
+    });
+    menuBtn.addEventListener('mouseenter', () => { clearTimeout(hoverTimer); openPanel(); });
+    optionsPanel.addEventListener('mouseenter', () => { clearTimeout(hoverTimer); });
+    optionsPanel.addEventListener('mouseleave', () => { hoverTimer = setTimeout(closePanel, 200); });
+    document.addEventListener('click', (e) => {
+      if (!optionsPanel.contains(e.target) && e.target !== menuBtn) closePanel();
+    });
+  }
   // Fallback: si en ~2.5s no hubo datos, renderizar con amanecer por defecto
   setTimeout(() => { if (!bootReady) { bootReady = true; fullUpdate(); } }, 2500);
 document.getElementById('gpsBtn').addEventListener('click', () => {
@@ -257,10 +593,11 @@ document.getElementById('gpsBtn').addEventListener('click', () => {
   fetchIPLocation(fetchSun); // ← esta función vive ahora en geo-ip.js
   
   function goToCurrentRow() {
-      const ord = parseInt(document.getElementById("curOrd").textContent, 10);
-      const total = document.querySelectorAll('#shemotTable tbody tr').length || 72;
-      const nextOrd = (ord % total) + 1;
-      const row = document.querySelector(`tr[data-ord="${nextOrd}"]`);
+      const rows = Array.from(document.querySelectorAll('#shemotTable tbody tr'));
+      const total = rows.length || 72;
+      const idx = (window.__currentRowIndex || 0);
+      const nextIdx = (idx + 1) % total;
+      const row = rows[nextIdx];
       if (row) {
         row.scrollIntoView({ behavior: "smooth", block: "center" });
         row.classList.add("highlight");
