@@ -65,10 +65,13 @@
   const curLet  = document.getElementById('curLet');
   const curGem  = document.getElementById('curGem');
   const curZod  = document.getElementById('curZod');
+  const curDur  = document.getElementById('curDur');
   // 12h mode control (checkbox, hidden) and anchor-at-sunrise (visible)
   const twelveToggle = document.getElementById('twelveToggle');
   const anchorToggle  = document.getElementById('anchorSun');
   const solarToggle   = document.getElementById('solarAdjust');
+  const latDegWrap    = document.getElementById('latDegWrap');
+  const latDegInput   = document.getElementById('latDeg');
 
   // Keep sunrise/sunset minutes (local TZ minutes since 00:00)
   const sun = { sunriseMin: null, sunsetMin: null, nextSunriseMin: null, nextSunsetMin: null };
@@ -83,6 +86,19 @@
   const getSolarPref = () => { try { return localStorage.getItem('solarAdjust') === '1'; } catch (_) { return false; } };
   const setSolarPref = (v) => { try { localStorage.setItem('solarAdjust', v ? '1' : '0'); } catch (_) {} };
   let timeline = null; // computed starts per slot when solar adjust is ON
+
+  function ensureCoords() {
+    if (!window.coords) window.coords = { lat: 0, lon: 0 };
+    return window.coords;
+  }
+
+  function syncLatUIFromCoords() {
+    if (!latDegInput) return;
+    const c = ensureCoords();
+    if (typeof c.lat === 'number' && !isNaN(c.lat)) {
+      latDegInput.value = (Math.round(c.lat * 10) / 10).toString();
+    }
+  }
 
   /* ---------- 3. Safe access to data from PHP ---------- */
   const n = window.names || [];
@@ -103,9 +119,13 @@
   };
   const hmToMins = (hhmm) => {
     if (!hhmm || typeof hhmm !== 'string') return null;
-    const [h, m] = hhmm.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return null;
-    return mins(h, m);
+    // Normalize possible "HH:MM SS" (space) into "HH:MM:SS"
+    const norm = hhmm.replace(/\s+/, ':').trim();
+    const parts = norm.split(':').map(Number);
+    const h = parts[0], m = parts[1], s = (parts.length > 2 ? parts[2] : 0) || 0;
+    if (isNaN(h) || isNaN(m) || isNaN(s)) return null;
+    const total = (h * 60) + m + (s / 60);
+    return ((total % 1440) + 1440) % 1440;
   };
   const inWindow = (nowMin, startMin, dur) => {
     // checks if now in [start, start+dur) modulo 1440
@@ -141,6 +161,16 @@
     }).join('');
   };
   const reverseWords = s => (typeof s === 'string') ? s.split(/\s+/).reverse().join(' ') : s;
+
+  const formatDuration = (minsVal) => {
+    const lang = (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'es';
+    const val = Math.round(minsVal * 10) / 10; // 1 decimal
+    if (lang === 'en') {
+      return `${val.toFixed(1)} min`;
+    }
+    // ES default: decimal comma and prime for minutes
+    return `${val.toFixed(1).replace('.', ',')}′`;
+  };
 
   function isTwelveMode() { return getPref12(); }
 
@@ -273,15 +303,18 @@
     rows.forEach((tr, i) => {
       const useSolar = getSolarPref() && Array.isArray(timeline) && timeline.length >= rows.length;
       const t = useSolar ? timeline[i] : (base + i * delta) % 1440;
+      const durMin = useSolar
+        ? ((timeline[(i + 1) % rows.length] - t + 1440) % 1440)
+        : delta;
       const ordNum = (i % 72) + 1;
       const idxName = ordNum - 1;
       const reverseLetters = (sched.mode === 'ten') && (sun.sunriseMin != null)
         ? inWindow(t, sun.sunriseMin, 720)
         : false;
 
-      // Hora de inicio
+      // Hora de inicio en 2 líneas: hora arriba, duración abajo
       const tdTime = tr.children[1];
-      tdTime.textContent = formatTime(t, showSeconds);
+      tdTime.innerHTML = `${formatTime(t, showSeconds)}<br><span class="slot-dur">⏳ ${formatDuration(durMin)}</span>`;
 
       // Nombre hebreo (stam + meta)
       const baseName = n[idxName] || '';
@@ -344,13 +377,27 @@
       const reverseLetters = (sched.mode === 'ten') && (sun.sunriseMin != null)
         ? inWindow(nowMin, sun.sunriseMin, 720)
         : false;
-      const start = (getSolarPref() && Array.isArray(timeline) && timeline.length) ? timeline[pos % timeline.length] : (base + pos * delta) % 1440;
+      const useSolar = getSolarPref() && Array.isArray(timeline) && timeline.length;
+      const start = useSolar ? timeline[pos % timeline.length] : (base + pos * delta) % 1440;
+      // Compute slot duration in minutes (may be fractional when solar adjust is ON)
+      let durMin;
+      if (useSolar) {
+        const next = timeline[(pos + 1) % timeline.length];
+        durMin = ((next - start + 1440) % 1440);
+      } else {
+        durMin = delta;
+      }
       const rowIndex = pos;
       // Save current row index for navigation
       try { window.__currentRowIndex = rowIndex; } catch(_) {}
     
       // Mostrar hora de inicio
       curTime.textContent = formatTime(start, getSolarPref());
+      if (curDur) {
+        curDur.textContent = formatDuration(durMin);
+        const hint = (window.I18N && I18N.t) ? I18N.t('labels.duration_hint') : 'Duración del bloque';
+        curDur.title = hint;
+      }
       curOrd.textContent = ord;
       if (curHeading) {
         const lang = (window.I18N && window.I18N.getLang && window.I18N.getLang()) || 'es';
@@ -427,7 +474,8 @@ function fetchSun() {
         if (!sunriseInput) {
           console.error("❌ sunrise input no encontrado en el DOM");
         } else {
-          sunriseInput.value = j.sunrise;
+          // Normalize space separator to colon for <input type="time">
+          sunriseInput.value = (j.sunrise || '').replace(/\s+/, ':');
           console.log("✅ sunrise.value seteado a", j.sunrise);
 
           // Forzar eventos por si acaso
@@ -448,6 +496,8 @@ function fetchSun() {
       if (j.next_sunset) {
         sun.nextSunsetMin = hmToMins(j.next_sunset);
       }
+      // Update lat UI after we have coords and times
+      try { syncLatUIFromCoords(); } catch(_) {}
     })
     .finally(() => {
       console.log("🔁 Forzando fullUpdate()");
@@ -467,8 +517,12 @@ function scheduleNextUpdate() {
   let chosenTime = null;
   for (const cell of timeCells) {
     const txt = (cell.textContent || '').trim();
-    const parts = txt.split(':').map(Number);
-    const hh = parts[0], mm = parts[1], ss = (parts.length > 2 ? parts[2] : 0) || 0;
+    // Extract only the leading HH:MM[:SS] from the cell (ignoring duration text)
+    const m = txt.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (!m) continue;
+    const hh = Number(m[1]);
+    const mm = Number(m[2]);
+    const ss = Number(m[3] || 0);
     if (isNaN(hh) || isNaN(mm) || isNaN(ss)) continue;
     const nextTime = new Date();
     nextTime.setHours(hh, mm, ss, 0);
@@ -522,18 +576,36 @@ function scheduleNextUpdate() {
     solarToggle.addEventListener('change', () => {
       setSolarPref(solarToggle.checked);
       bootReady = true;
+      if (latDegWrap) latDegWrap.hidden = !solarToggle.checked;
       fullUpdate();
+    });
+    if (latDegWrap) latDegWrap.hidden = !solarToggle.checked;
+  }
+  // Latitude input wiring
+  if (latDegInput) {
+    latDegInput.addEventListener('change', () => {
+      const v = parseFloat(latDegInput.value);
+      if (isNaN(v)) return;
+      const c = ensureCoords();
+      c.lat = Math.max(-90, Math.min(90, v));
+      fetchSun();
     });
   }
   const attachHintHandlers = (el, anchorEl) => {
     if (!el) return;
-    const hintText = (window.I18N && I18N.t) ? I18N.t('twelve.hint') : 'Modo 12h (10 min)';
+    const getHintText = () => {
+      const a = anchorEl || el;
+      const titleAttr = a && a.getAttribute ? a.getAttribute('title') : '';
+      if (titleAttr) return titleAttr;
+      // fallback generic text
+      return (window.I18N && I18N.t) ? (I18N.t('twelve.hint') || 'Información') : 'Información';
+    };
     let hintTimer = null;
     let hintEl = null;
     const showHint = () => {
       if (hintEl) return;
       hintEl = document.createElement('div');
-      hintEl.textContent = hintText;
+      hintEl.textContent = getHintText();
       hintEl.style.position = 'fixed';
       hintEl.style.zIndex = '9999';
       hintEl.style.background = 'rgba(0,0,0,0.8)';
@@ -545,7 +617,7 @@ function scheduleNextUpdate() {
       hintEl.style.top = Math.max(8, r.bottom + 6) + 'px';
       hintEl.style.left = Math.max(8, Math.min(window.innerWidth - 220, r.left)) + 'px';
       document.body.appendChild(hintEl);
-      setTimeout(hideHint, 2000);
+      setTimeout(hideHint, 1800);
     };
     const hideHint = () => { if (hintEl) { hintEl.remove(); hintEl = null; } };
     const startPress = () => { hintTimer = setTimeout(showHint, 600); };
@@ -555,9 +627,23 @@ function scheduleNextUpdate() {
     el.addEventListener('mouseup', endPress);
     el.addEventListener('mouseleave', endPress);
     el.addEventListener('touchend', endPress);
+    // Also show on tap/click briefly (Android has no hover)
+    el.addEventListener('click', () => { showHint(); setTimeout(hideHint, 1200); });
   };
   if (twelveToggle) {
-    attachHintHandlers(twelveToggle, twelveToggle);
+    const twelveLabel = document.querySelector('label[for="twelveToggle"]');
+    attachHintHandlers(twelveToggle, twelveLabel || twelveToggle);
+    if (twelveLabel) attachHintHandlers(twelveLabel, twelveLabel);
+  }
+  if (anchorToggle) {
+    const anchorLabel = document.querySelector('label[for="anchorSun"]');
+    attachHintHandlers(anchorToggle, anchorLabel || anchorToggle);
+    if (anchorLabel) attachHintHandlers(anchorLabel, anchorLabel);
+  }
+  if (solarToggle) {
+    const solarLabel = document.querySelector('label[for="solarAdjust"]');
+    attachHintHandlers(solarToggle, solarLabel || solarToggle);
+    if (solarLabel) attachHintHandlers(solarLabel, solarLabel);
   }
   // Menu interactions (click/hover)
   if (menuBtn && optionsPanel) {

@@ -88,7 +88,7 @@ if (file_exists($en_file)) {
         <span class="label-long" data-i18n="ui.sunrise">Amanecer:</span>
         <span class="label-short" aria-hidden="true">🌅</span>
       </label>
-      <input type="time" id="sunrise" step="60" value="06:00">
+  <input type="time" id="sunrise" step="1" value="06:00:00">
       <button id="gpsBtn" class="gps-btn" data-i18n-title="ui.use_gps_title" data-i18n-aria-label="ui.use_gps_title" title="Usar GPS para mayor precisión" aria-label="Usar GPS para mayor precisión">
         <span class="gps-btn__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img" focusable="false">
@@ -111,6 +111,11 @@ if (file_exists($en_file)) {
         <input type="checkbox" id="solarAdjust" class="solar-toggle" aria-label="Ajuste solar proporcional" />
         <label for="solarAdjust" class="solar-label" title="⏳ Ajusta día/noche para que 36/36 o 72/72 cubran exactamente la duración real">⏳</label>
       </span>
+      <!-- Latitud compacta (visible cuando ⏳ está activo) -->
+      <span class="latdeg-wrap" id="latDegWrap" hidden>
+        <label for="latDeg" class="latdeg-label" title="Latitud geográfica (grados). Norte positivo, Sur negativo.">φ</label>
+        <input type="number" id="latDeg" class="latdeg-input" min="-90" max="90" step="0.1" placeholder="0" aria-label="Latitud (°)" />
+      </span>
     </div>
   </div>
 </div>
@@ -122,7 +127,7 @@ if (file_exists($en_file)) {
   <h2 data-i18n="current.title">🕯️ Energía disponible en este momento</h2>
     <!-- Hora + orden -->
     <div class="cur-info-col">
-      <div class="cur-time">⏰ <span id="curTime">--:--</span></div>
+      <div class="cur-time">⏰ <span id="curTime">--:--</span> · ⏳ <span id="curDur" title="Duración del bloque">--′</span></div>
       <div class="cur-heading">
         <span id="curHeading">--</span>
         <span id="curOrd" style="display:none">--</span>

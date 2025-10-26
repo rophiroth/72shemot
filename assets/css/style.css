@@ -282,6 +282,17 @@ td.gem {
   box-shadow: 0 0 8px var(--accent);
 }
 
+/* Hora + duración en celdas de tiempo */
+td.hora {
+  line-height: 1.1;
+}
+.hora .slot-dur {
+  display: block;
+  font-size: 0.85em;
+  color: #cdb9da;
+  margin-top: 2px;
+}
+
 /* 12h mode tiny controls */
 .twelve-mode-wrap {
   display: inline-flex;
@@ -560,6 +571,27 @@ td.gem {
   justify-content: center;
 }
 .options-panel .toggles { margin-top: 0.4rem; }
+
+/* Compact latitude control */
+.latdeg-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.5rem;
+}
+.latdeg-label {
+  font-size: 0.95em;
+  color: var(--glow);
+}
+.latdeg-input {
+  width: 6ch;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.85em;
+}
 
 /* -----------------------------------------------------------
    Utilidades
