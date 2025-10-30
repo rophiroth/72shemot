@@ -75,16 +75,35 @@
 
   // Keep sunrise/sunset minutes (local TZ minutes since 00:00)
   const sun = { sunriseMin: null, sunsetMin: null, nextSunriseMin: null, nextSunsetMin: null };
+
+  // Preferences per-tab: use sessionStorage for active tab, fall back to localStorage for initial default
   const getPref12 = () => {
-    try { return localStorage.getItem('mode12') === '1'; } catch (_) { return false; }
+    try {
+      const s = sessionStorage.getItem('mode12');
+      if (s !== null) return s === '1';
+      const l = localStorage.getItem('mode12');
+      return l === '1';
+    } catch (_) { return false; }
   };
-  const setPref12 = (v) => { try { localStorage.setItem('mode12', v ? '1' : '0'); } catch (_) {} };
+  const setPref12 = (v) => { try { sessionStorage.setItem('mode12', v ? '1' : '0'); } catch (_) {} };
   const getAnchorPref = () => {
-    try { return localStorage.getItem('anchorSunrise') === '1'; } catch (_) { return false; }
+    try {
+      const s = sessionStorage.getItem('anchorSunrise');
+      if (s !== null) return s === '1';
+      const l = localStorage.getItem('anchorSunrise');
+      return l === '1';
+    } catch (_) { return false; }
   };
-  const setAnchorPref = (v) => { try { localStorage.setItem('anchorSunrise', v ? '1' : '0'); } catch (_) {} };
-  const getSolarPref = () => { try { return localStorage.getItem('solarAdjust') === '1'; } catch (_) { return false; } };
-  const setSolarPref = (v) => { try { localStorage.setItem('solarAdjust', v ? '1' : '0'); } catch (_) {} };
+  const setAnchorPref = (v) => { try { sessionStorage.setItem('anchorSunrise', v ? '1' : '0'); } catch (_) {} };
+  const getSolarPref = () => {
+    try {
+      const s = sessionStorage.getItem('solarAdjust');
+      if (s !== null) return s === '1';
+      const l = localStorage.getItem('solarAdjust');
+      return l === '1';
+    } catch (_) { return false; }
+  };
+  const setSolarPref = (v) => { try { sessionStorage.setItem('solarAdjust', v ? '1' : '0'); } catch (_) {} };
   let timeline = null; // computed starts per slot when solar adjust is ON
 
   function ensureCoords() {
@@ -669,6 +688,22 @@ function scheduleNextUpdate() {
       if (!optionsPanel.contains(e.target) && e.target !== menuBtn) closePanel();
     });
   }
+  // Keep UI in sync if another tab updates global defaults in localStorage
+  try {
+    window.addEventListener('storage', (e) => {
+      if (!e || !e.key) return;
+      if (e.key === 'mode12' || e.key === 'anchorSunrise' || e.key === 'solarAdjust') {
+        if (twelveToggle) twelveToggle.checked = getPref12();
+        if (anchorToggle) anchorToggle.checked = getAnchorPref();
+        if (solarToggle) {
+          solarToggle.checked = getSolarPref();
+          if (latDegWrap) latDegWrap.hidden = !solarToggle.checked;
+        }
+        bootReady = true;
+        fullUpdate();
+      }
+    });
+  } catch (_) {}
   // Fallback: si en ~2.5s no hubo datos, renderizar con amanecer por defecto
   setTimeout(() => { if (!bootReady) { bootReady = true; fullUpdate(); } }, 2500);
 document.getElementById('gpsBtn').addEventListener('click', () => {
