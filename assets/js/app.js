@@ -194,14 +194,18 @@
   function isTwelveMode() { return getPref12(); }
 
   function getNowLocalHM() {
-    const now = new Date().toLocaleString('en-US', {
+    const nowStr = new Date().toLocaleString('en-US', {
       timeZone: tzSel.value,
       hour12: false,
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      second: '2-digit'
     });
-    const [h, m] = now.split(':').map(Number);
-    return { h, m, nowMin: mins(h, m) };
+    const parts = nowStr.split(':').map(Number);
+    const h = parts[0], m = parts[1], s = (parts.length > 2 ? parts[2] : 0) || 0;
+    const baseMin = mins(h, m);
+    const nowMin = baseMin + (isNaN(s) ? 0 : (s / 60));
+    return { h, m, nowMin };
   }
 
   function getSchedule() {
