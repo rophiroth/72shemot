@@ -194,8 +194,9 @@
   function isTwelveMode() { return getPref12(); }
 
   function getNowLocalHM() {
+    const tz = (tzSel && tzSel.value) ? tzSel.value : (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
     const nowStr = new Date().toLocaleString('en-US', {
-      timeZone: tzSel.value,
+      timeZone: tz,
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
@@ -528,7 +529,7 @@ function fetchSun() {
     });
 }
 
-window.fetchSun = fetchSun;
+  window.fetchSun = fetchSun;
 
 let updateScheduled = false;
 function scheduleNextUpdate() {
@@ -555,9 +556,8 @@ function scheduleNextUpdate() {
     nextStartMin = (base + (pos + 1) * delta) % 1440;
   }
   const diffMin = (nextStartMin - nowMin + 1440) % 1440;
-  // Anticipamos un poco y evitamos redondeos que empujen al minuto siguiente
-  let delay = Math.floor(diffMin * 60000) - 250; // ~0.25s antes del borde
-  if (delay < 10) delay = 10; // seguridad
+  let delay = Math.max(0, Math.round(diffMin * 60000));
+  if (delay === 0) delay = 500; // seguridad
   console.log("⏱️ Próxima actualización en:", Math.round(delay / 1000), "segundos");
   setTimeout(() => {
     console.log("🔁 Ejecutando actualización programada");
@@ -709,6 +709,22 @@ function scheduleNextUpdate() {
   } catch (_) {}
   // Fallback: si en ~2.5s no hubo datos, renderizar con amanecer por defecto
   setTimeout(() => { if (!bootReady) { bootReady = true; fullUpdate(); } }, 2500);
+  // Heartbeat: re-eval current block periodically as safety net
+  try {
+    if (!window.__heartbeatTimer) {
+      window.__heartbeatTimer = setInterval(() => {
+        if (!bootReady) return;
+        try { renderCurrent(sun.sunriseMin); } catch (_) {}
+      }, 5000);
+    }
+  } catch (_) {}
+  // Also refresh when regaining focus or tab becomes visible
+  try {
+    window.addEventListener('focus', () => { if (bootReady) renderCurrent(sun.sunriseMin); });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && bootReady) renderCurrent(sun.sunriseMin);
+    });
+  } catch (_) {}
 document.getElementById('gpsBtn').addEventListener('click', () => {
   console.log("📡 Forzando GPS...");
       tryGeolocation(fetchSun); // ← usa la función de geo-ip.js con callback
