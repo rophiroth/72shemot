@@ -555,8 +555,9 @@ function scheduleNextUpdate() {
     nextStartMin = (base + (pos + 1) * delta) % 1440;
   }
   const diffMin = (nextStartMin - nowMin + 1440) % 1440;
-  let delay = Math.max(0, Math.round(diffMin * 60000));
-  if (delay === 0) delay = 500; // seguridad
+  // Anticipamos un poco y evitamos redondeos que empujen al minuto siguiente
+  let delay = Math.floor(diffMin * 60000) - 250; // ~0.25s antes del borde
+  if (delay < 10) delay = 10; // seguridad
   console.log("⏱️ Próxima actualización en:", Math.round(delay / 1000), "segundos");
   setTimeout(() => {
     console.log("🔁 Ejecutando actualización programada");
