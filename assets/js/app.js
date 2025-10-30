@@ -479,6 +479,22 @@
 
   /* ---------- 6. Sunrise fetch ---------- */
   //let coords = null;
+  // Track day change in selected TZ to refresh sunrise/sunset daily
+  let __lastDateKey = null;
+  function getDateKey() {
+    try {
+      const tz = (tzSel && tzSel.value) ? tzSel.value : (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+      const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
+      return fmt.format(new Date()); // YYYY-MM-DD
+    } catch (_) { return null; }
+  }
+  function ensureFreshSunTimes() {
+    const key = getDateKey();
+    if (key && key !== __lastDateKey) {
+      __lastDateKey = key;
+      try { fetchSun(); } catch (_) { /* ignore */ }
+    }
+  }
 function fetchSun() {
   if (!window.coords) {
     console.warn("⚠️ No hay coordenadas aún.");
@@ -714,15 +730,16 @@ function scheduleNextUpdate() {
     if (!window.__heartbeatTimer) {
       window.__heartbeatTimer = setInterval(() => {
         if (!bootReady) return;
+        ensureFreshSunTimes();
         try { renderCurrent(sun.sunriseMin); } catch (_) {}
       }, 5000);
     }
   } catch (_) {}
   // Also refresh when regaining focus or tab becomes visible
   try {
-    window.addEventListener('focus', () => { if (bootReady) renderCurrent(sun.sunriseMin); });
+    window.addEventListener('focus', () => { if (bootReady) { ensureFreshSunTimes(); renderCurrent(sun.sunriseMin); } });
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && bootReady) renderCurrent(sun.sunriseMin);
+      if (!document.hidden && bootReady) { ensureFreshSunTimes(); renderCurrent(sun.sunriseMin); }
     });
   } catch (_) {}
 document.getElementById('gpsBtn').addEventListener('click', () => {
