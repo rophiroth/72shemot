@@ -710,3 +710,6 @@ btnTop.addEventListener('click', e => {
 });
       
 })();
+
+// Mark script as successfully loaded (for fallback loader)
+try { window.__APP_JS_LOADED__ = true; } catch (_) {}

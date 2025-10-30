@@ -9,8 +9,10 @@ $rows = get72ShemotData();
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>72 Nombres – Vista Comparativa</title>
   <link rel="icon" type="image/png" href="assets/img/favicon.png">
-  <link rel="stylesheet" href="assets/css/style.css?v=<?php echo time(); ?>">
-  <link rel="stylesheet" href="assets/css/styleAll.css?v=<?php echo time(); ?>">
+  <?php $css_v = @filemtime(__DIR__ . '/assets/css/style.css') ?: time(); ?>
+  <?php $css_all_v = @filemtime(__DIR__ . '/assets/css/styleAll.css') ?: time(); ?>
+  <link rel="stylesheet" href="assets/css/style.css?v=<?= $css_v ?>">
+  <link rel="stylesheet" href="assets/css/styleAll.css?v=<?= $css_all_v ?>">
 </head>
 <body class="all-view">
   <header>
@@ -118,8 +120,12 @@ $rows = get72ShemotData();
     window.GEMS  = <?php echo json_encode(array_column($rows,'guematria')); ?>;
     window.DESC  = <?php echo json_encode(array_column($rows,'significado')); ?>;
   </script>
-  <script src="assets/js/tz-select.js"></script>
-  <script src="assets/js/geo-ip.js?v=<?php echo time(); ?>"></script>
+  <?php
+    $tz_v  = @filemtime(__DIR__ . '/assets/js/tz-select.js') ?: time();
+    $geo_v = @filemtime(__DIR__ . '/assets/js/geo-ip.js') ?: time();
+  ?>
+  <script src="assets/js/tz-select.js?v=<?= $tz_v ?>" defer></script>
+  <script src="assets/js/geo-ip.js?v=<?= $geo_v ?>" defer></script>
   <script>
     // Utiles
     const two = n => n.toString().padStart(2,'0');

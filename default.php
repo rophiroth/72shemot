@@ -32,7 +32,8 @@ if (file_exists($en_file)) {
   <title>72 Nombres de אל – Jesed</title>
 
   <!-- CSS -->
-    <link rel="stylesheet" href="assets/css/style.css?v=<?= time() ?>">
+    <?php $css_v = @filemtime(__DIR__ . '/assets/css/style.css') ?: time(); ?>
+    <link rel="stylesheet" href="assets/css/style.css?v=<?= $css_v ?>">
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link rel="icon" type="image/png"
  sizes="192x192" href="assets/img/icon-192x192.png" style="width: 192px; height: 192px;">
@@ -247,10 +248,30 @@ if (file_exists($en_file)) {
 <a href="#" class="back-to-top" data-i18n-title="back_to_top" title="Volver arriba">↑</a>
 
 <!-- SCRIPTS -->
-<script src="assets/js/i18n.js?v=<?= time() ?>"></script>
-<script src="assets/js/geo-ip.js?v=<?= time() ?>" defer></script>
-<script src="assets/js/tz-select.js"></script>
-<script src="assets/js/app.js?v=<?= time() ?>" defer></script>
+<?php
+  $i18n_v = @filemtime(__DIR__ . '/assets/js/i18n.js') ?: time();
+  $geo_v  = @filemtime(__DIR__ . '/assets/js/geo-ip.js') ?: time();
+  $tz_v   = @filemtime(__DIR__ . '/assets/js/tz-select.js') ?: time();
+  $app_v  = @filemtime(__DIR__ . '/assets/js/app.js') ?: time();
+?>
+<script src="assets/js/i18n.js?v=<?= $i18n_v ?>" defer></script>
+<script src="assets/js/geo-ip.js?v=<?= $geo_v ?>" defer></script>
+<script src="assets/js/tz-select.js?v=<?= $tz_v ?>" defer></script>
+<script src="assets/js/app.js?v=<?= $app_v ?>" defer></script>
+<script>
+  // Fallback: if app.js failed to load due to cache-buster issues,
+  // try loading it again without the ?v= query (helps file:// or odd servers).
+  window.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      if (!window.__APP_JS_LOADED__) {
+        console.warn('app.js with cache-buster failed; retrying without query param');
+        var s = document.createElement('script');
+        s.src = 'assets/js/app.js';
+        document.body.appendChild(s);
+      }
+    }, 500);
+  });
+  </script>
 <script>
   window.addEventListener('load', () => {
     document.body.classList.remove('no-show');
