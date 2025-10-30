@@ -532,34 +532,32 @@ window.fetchSun = fetchSun;
 
 let updateScheduled = false;
 function scheduleNextUpdate() {
-    if (updateScheduled) return; // ⛔ ya fue llamada
+  if (updateScheduled) return; // ya programada
   updateScheduled = true;
-  const now = new Date();
-  const timeCells = Array.from(document.querySelectorAll('#shemotTable tbody .hora'));
-  let minDelay = Infinity;
-  let chosenTime = null;
-  for (const cell of timeCells) {
-    const txt = (cell.textContent || '').trim();
-    // Extract only the leading HH:MM[:SS] from the cell (ignoring duration text)
-    const m = txt.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-    if (!m) continue;
-    const hh = Number(m[1]);
-    const mm = Number(m[2]);
-    const ss = Number(m[3] || 0);
-    if (isNaN(hh) || isNaN(mm) || isNaN(ss)) continue;
-    const nextTime = new Date();
-    nextTime.setHours(hh, mm, ss, 0);
-    let d = nextTime - now;
-    if (d <= 0) {
-      nextTime.setDate(nextTime.getDate() + 1);
-      d = nextTime - now;
+  // Calcular próximo umbral en la TZ seleccionada, sin depender del Date local
+  const { nowMin } = getNowLocalHM();
+  const sched = getSchedule();
+  const useSolar = getSolarPref() && Array.isArray(timeline) && timeline.length;
+  let nextStartMin = null;
+  if (useSolar) {
+    let ahead = Infinity;
+    for (let i = 0; i < timeline.length; i++) {
+      const t = timeline[i];
+      const a = (t - nowMin + 1440) % 1440;
+      if (a > 0 && a < ahead) ahead = a;
     }
-    if (d < minDelay) { minDelay = d; chosenTime = nextTime; }
+    if (ahead === Infinity || ahead === 0) ahead = 0.01; // ~0.6s
+    nextStartMin = (nowMin + ahead) % 1440;
+  } else {
+    const base = sched.base;
+    const delta = sched.delta;
+    const pos = Math.floor(((nowMin - base + 1440) % 1440) / delta);
+    nextStartMin = (base + (pos + 1) * delta) % 1440;
   }
-
-  const delay = (minDelay === Infinity) ? 60_000 : minDelay; // fallback 1 min
-  const secs = Math.round(delay / 1000);
-  console.log("⏱️ Próxima actualización en:", secs, "segundos");
+  const diffMin = (nextStartMin - nowMin + 1440) % 1440;
+  let delay = Math.max(0, Math.round(diffMin * 60000));
+  if (delay === 0) delay = 500; // seguridad
+  console.log("⏱️ Próxima actualización en:", Math.round(delay / 1000), "segundos");
   setTimeout(() => {
     console.log("🔁 Ejecutando actualización programada");
     fullUpdate();
