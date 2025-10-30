@@ -551,6 +551,8 @@ let updateScheduled = false;
 function scheduleNextUpdate() {
   if (updateScheduled) return; // ya programada
   updateScheduled = true;
+  // Asegurar datos de sol del día actual
+  try { ensureFreshSunTimes(); } catch (_) {}
   // Calcular próximo umbral en la TZ seleccionada, sin depender del Date local
   const { nowMin } = getNowLocalHM();
   const sched = getSchedule();
@@ -572,8 +574,9 @@ function scheduleNextUpdate() {
     nextStartMin = (base + (pos + 1) * delta) % 1440;
   }
   const diffMin = (nextStartMin - nowMin + 1440) % 1440;
-  let delay = Math.max(0, Math.round(diffMin * 60000));
-  if (delay === 0) delay = 500; // seguridad
+  // Disparar justo antes del borde; evitar redondeo hacia arriba
+  let delay = Math.floor(diffMin * 60000) - 250;
+  if (delay < 10) delay = 10; // seguridad
   console.log("⏱️ Próxima actualización en:", Math.round(delay / 1000), "segundos");
   setTimeout(() => {
     console.log("🔁 Ejecutando actualización programada");
@@ -725,21 +728,11 @@ function scheduleNextUpdate() {
   } catch (_) {}
   // Fallback: si en ~2.5s no hubo datos, renderizar con amanecer por defecto
   setTimeout(() => { if (!bootReady) { bootReady = true; fullUpdate(); } }, 2500);
-  // Heartbeat: re-eval current block periodically as safety net
-  try {
-    if (!window.__heartbeatTimer) {
-      window.__heartbeatTimer = setInterval(() => {
-        if (!bootReady) return;
-        ensureFreshSunTimes();
-        try { renderCurrent(sun.sunriseMin); } catch (_) {}
-      }, 5000);
-    }
-  } catch (_) {}
   // Also refresh when regaining focus or tab becomes visible
   try {
-    window.addEventListener('focus', () => { if (bootReady) { ensureFreshSunTimes(); renderCurrent(sun.sunriseMin); } });
+    window.addEventListener('focus', () => { if (bootReady) { ensureFreshSunTimes(); fullUpdate(); } });
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && bootReady) { ensureFreshSunTimes(); renderCurrent(sun.sunriseMin); }
+      if (!document.hidden && bootReady) { ensureFreshSunTimes(); fullUpdate(); }
     });
   } catch (_) {}
 document.getElementById('gpsBtn').addEventListener('click', () => {
